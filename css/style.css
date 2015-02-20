@@ -1,0 +1,17 @@
+* {
+    padding: 0;
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+}
+html,
+body,
+#map-canvas {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+.searchbox {
+    position: absolute;
+    left: 20px;
+    top: 20px;
+}

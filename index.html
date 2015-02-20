@@ -12,7 +12,10 @@
                     lat: 32.924691,
                     lng: -96.7547525
                 },
-                zoom: 15
+                zoom: 15,
+                zoomControl: false,
+                panControl: false,
+                streetViewControl: false 
             };
             var map = new google.maps.Map(document.getElementById('map-canvas'),
                 mapOptions);
@@ -24,7 +27,7 @@
 <body>
     <div id="map-canvas">
     </div>
-    <input type="text" id="street" value="Search" class="searchbox">    
+    <input type="text" id="street" value="Search" class="searchbox">
 </body>
 
 </html>
