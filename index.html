@@ -1,33 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <title>Neighborhood Map</title>
     <link rel="stylesheet" href="css/style.css">
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBQ7Uhj2LmBn2yDp488Zh1YZCXB0ObiLM0">
-    </script>
-    <script type="text/javascript">
-        function initialize() {
-            var mapOptions = {
-                center: {
-                    lat: 32.924691,
-                    lng: -96.7547525
-                },
-                zoom: 15,
-                zoomControl: false,
-                panControl: false,
-                streetViewControl: false 
-            };
-            var map = new google.maps.Map(document.getElementById('map-canvas'),
-                mapOptions);
-        }
-        google.maps.event.addDomListener(window, 'load', initialize);
-    </script>
 </head>
 
 <body>
     <div id="map-canvas">
     </div>
     <input type="text" id="street" value="Search" class="searchbox">
+    
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBQ7Uhj2LmBn2yDp488Zh1YZCXB0ObiLM0"></script>
+    <script src="js/knockout-3.0.0.js" type="text/javascript"></script>
+    <script src="js/script.js" type="text/javascript"></script>
 </body>
 
 </html>
