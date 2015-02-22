@@ -1,4 +1,4 @@
-
+//http://www.uiparade.com/portfolio/natural-search-bar/
 //http://www.w3schools.com/googleapi/tryit.asp?filename=tryhtml_map_marker_infowindow
 //http://www.w3schools.com/googleapi/tryit.asp?filename=tryhtml_map_marker_infowindow2
 //http://stackoverflow.com/questions/9309251/google-maps-javascript-api-get-gps-coordinates-from-address
