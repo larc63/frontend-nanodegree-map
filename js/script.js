@@ -41,20 +41,20 @@
 //
 ////loadData();
 //
-//$.getJSON( NYT_BASE_URL + "obama&api-key=" + NYT_KEY, function( data ) {
-//  var items = [];
-//  var articles = data.response.docs;
-//  
-//  $.each( articles, function( key, val ) {
-//    items.push( "<li id='" + articles[key]._id + "' class='article'><a href='" + articles[key].web_url+ "'>" + articles[key].headline.main + "</a><p>" + articles[key].snippet+ "</p></li>" );
-//  });
-// 
-//  $( "<ul/>", {
-//    html: items.join( "" )
-//  }).appendTo( "#nytimes-articles" );
-//}).error(function() {
-//    $( "<p>NYT Articles Could not be loaded</p>" ).appendTo( "#nytimes-articles" );
-//  });
+//$.getJSON(NYT_BASE_URL + "obama&api-key=" + NYT_KEY, function (data) {
+//    var items = [];
+//    var articles = data.response.docs;
+//
+//    $.each(articles, function (key, val) {
+//        items.push("<li id='" + articles[key]._id + "' class='article'><a href='" + articles[key].web_url + "'>" + articles[key].headline.main + "</a><p>" + articles[key].snippet + "</p></li>");
+//    });
+//
+//    $("<ul/>", {
+//        html: items.join("")
+//    }).appendTo("#nytimes-articles");
+//}).error(function () {
+//    $("<p>NYT Articles Could not be loaded</p>").appendTo("#nytimes-articles");
+//});
 //
 //
 //(function() {
@@ -78,41 +78,90 @@
 //    headers: { 'Api-User-Agent-Udacity': 'Example/1.0' }
 //});
 //})();
+
 //Globals
 var DEFAULT_LAT = 32.9531079;
-var DEFAULT_LON = -96.8229146; 
+var DEFAULT_LNG = -96.8229146;
+var DEFAULT_ZOOM = 17;
+var FOURSQUARE_BASE_URL = "https://api.foursquare.com/v2/venues/search?oauth_token=C5YVRDGQGZLXH2SVONVBTXHZRYDBDDO4B5JLHQYEENJSFWS4&v=20150223&ll="; //
+
+//Model: Place
+
+var Place = function (data) {
+    this.id = data.id;
+    this.name = data.name;
+    this.address = data.address;
+    this.phone = data.phone;
+    this.lat = data.lat;
+    this.lng = data.lng;
+
+    console.log("created place object: " + this.name);
+}
+
 //View Model
 var ViewModel = function () {
     var self = this;
-    self.coder = new google.maps.Geocoder();
+    //    self.coder = new google.maps.Geocoder(); .. not needed until the "change neighborhood feature is implemented
     var mapOptions = {
         center: {
             lat: DEFAULT_LAT,
-            lng: DEFAULT_LON
+            lng: DEFAULT_LNG
         },
-        zoom: 17,
+        zoom: DEFAULT_ZOOM,
         zoomControl: false,
         panControl: false,
         streetViewControl: false
     };
-    self.map = new google.maps.Map(document.getElementById('map-canvas'),
-        mapOptions);
+    self.places = ko.observableArray([]);
+    self.markers = new Array([]);//ko.observableArray([]);
+    self.map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+    self.centerMarker = new google.maps.Marker({
+        position: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG),
+        map: self.map,
+        title: 'Click to zoom'
+    });
+
     google.maps.event.addListener(self.map, 'click', function (event) {
         placeMarker(event.latLng);
     });
 
-    var marker = new google.maps.Marker({
-        position: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LON),
-        map: self.map,
-        title: 'Click to zoom'
-    });
     google.maps.event.addListener(self.map, 'center_changed', function () {
         // 3 seconds after the center of the map has changed, pan back to the
         // marker.
         window.setTimeout(function () {
-            self.map.panTo(marker.getPosition());
+            self.map.panTo(self.centerMarker.getPosition());
         }, 1000);
     });
+
+    self.parseFourSquareResults = function (data) {
+        if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
+            var v = data.response.venues;
+            for (p in v) {
+                self.places.push(new Place({
+                    id: v[p].id,
+                    name: v[p].name,
+                    phone: v[p].contact.formattedPhone,
+                    address: v[p].location.formattedAddress,
+                    lat: v[p].location.lat,
+                    lng: v[p].location.lng,
+                    url: v[p].url
+                }));
+                var m = new google.maps.Marker({
+                    position: new google.maps.LatLng(v[p].location.lat, v[p].location.lng),
+                    map: self.map,
+                    title: v[p].name
+                });
+                self.markers.push({v[p].id: m});
+            }
+        }
+    }
+
+    $.getJSON(FOURSQUARE_BASE_URL + DEFAULT_LAT + "," + DEFAULT_LNG, function (data) {
+        self.parseFourSquareResults(data);
+    }).error(function () {
+        console.log("could not load foursquare data");
+    });
+
 }
 var vm = new ViewModel();
 ko.applyBindings(vm);
