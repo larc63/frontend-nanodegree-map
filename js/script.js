@@ -1,8 +1,13 @@
-
 //http://www.w3schools.com/googleapi/tryit.asp?filename=tryhtml_map_marker_infowindow
 //http://www.w3schools.com/googleapi/tryit.asp?filename=tryhtml_map_marker_infowindow2
 //http://stackoverflow.com/questions/9309251/google-maps-javascript-api-get-gps-coordinates-from-address
 //https://github.com/danceoval/neighborhood/blob/master/index.html
+//https://github.com/DawoonC/dw-neighborhood/blob/master/templates/js/app.js
+// stars from http://stackoverflow.com/questions/1987524/turn-a-number-into-star-rating-display-using-jquery-and-css
+// 4 square from https://developer.foursquare.com/docs/venues/search
+// to convert to data uri http://websemantics.co.uk/online_tools/image_to_data_uri_convertor/
+// fiddle for the modal http://jsfiddle.net/y5g8zg1b/24/
+
 //var NYT_KEY = "1b5ac26e8f1655981150f5e4d70bab71:9:70863163";	
 //var NYT_BASE_URL = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=";
 //
@@ -73,24 +78,41 @@
 //    headers: { 'Api-User-Agent-Udacity': 'Example/1.0' }
 //});
 //})();
+//Globals
+var DEFAULT_LAT = 32.9531079;
+var DEFAULT_LON = -96.8229146; 
 //View Model
-var ViewModel = function() {
+var ViewModel = function () {
+    var self = this;
+    self.coder = new google.maps.Geocoder();
+    var mapOptions = {
+        center: {
+            lat: DEFAULT_LAT,
+            lng: DEFAULT_LON
+        },
+        zoom: 17,
+        zoomControl: false,
+        panControl: false,
+        streetViewControl: false
+    };
+    self.map = new google.maps.Map(document.getElementById('map-canvas'),
+        mapOptions);
+    google.maps.event.addListener(self.map, 'click', function (event) {
+        placeMarker(event.latLng);
+    });
 
-        function initialize() {
-            var mapOptions = {
-                center: {
-                    lat: 32.924691,
-                    lng: -96.7547525
-                },
-                zoom: 15,
-                zoomControl: false,
-                panControl: false,
-                streetViewControl: false
-            };
-            var map = new google.maps.Map(document.getElementById('map-canvas'),
-                mapOptions);
-        }
-    initialize();
+    var marker = new google.maps.Marker({
+        position: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LON),
+        map: self.map,
+        title: 'Click to zoom'
+    });
+    google.maps.event.addListener(self.map, 'center_changed', function () {
+        // 3 seconds after the center of the map has changed, pan back to the
+        // marker.
+        window.setTimeout(function () {
+            self.map.panTo(marker.getPosition());
+        }, 1000);
+    });
 }
-
-ko.applyBindings(new ViewModel());
+var vm = new ViewModel();
+ko.applyBindings(vm);
