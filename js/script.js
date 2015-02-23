@@ -7,7 +7,9 @@
 // 4 square from https://developer.foursquare.com/docs/venues/search
 // to convert to data uri http://websemantics.co.uk/online_tools/image_to_data_uri_convertor/
 // fiddle for the modal http://jsfiddle.net/y5g8zg1b/24/
-
+// slide in panel from http://codyhouse.co/gem/css-slide-in-panel/
+// fiddle for the slide in panel http://jsfiddle.net/8fzz7ud1/
+// fiddle for a simplified slide in panel http://jsfiddle.net/7L8hgp8v/
 //var NYT_KEY = "1b5ac26e8f1655981150f5e4d70bab71:9:70863163";	
 //var NYT_BASE_URL = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=";
 //
@@ -94,6 +96,7 @@ var Place = function (data) {
     this.phone = data.phone;
     this.lat = data.lat;
     this.lng = data.lng;
+    this.marker = data.marker;
 
     console.log("created place object: " + this.name);
 }
@@ -113,7 +116,7 @@ var ViewModel = function () {
         streetViewControl: false
     };
     self.places = ko.observableArray([]);
-    self.markers = new Array([]);//ko.observableArray([]);
+    self.markers = ko.observableArray([]);
     self.map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
     self.centerMarker = new google.maps.Marker({
         position: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG),
@@ -122,7 +125,8 @@ var ViewModel = function () {
     });
 
     google.maps.event.addListener(self.map, 'click', function (event) {
-        placeMarker(event.latLng);
+        var lat = event.latLng.k;
+        var lng = event.latLng.D;
     });
 
     google.maps.event.addListener(self.map, 'center_changed', function () {
@@ -137,6 +141,11 @@ var ViewModel = function () {
         if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
             var v = data.response.venues;
             for (p in v) {
+                var m = new google.maps.Marker({
+                    position: new google.maps.LatLng(v[p].location.lat, v[p].location.lng),
+                    map: self.map,
+                    title: v[p].name
+                });
                 self.places.push(new Place({
                     id: v[p].id,
                     name: v[p].name,
@@ -144,14 +153,9 @@ var ViewModel = function () {
                     address: v[p].location.formattedAddress,
                     lat: v[p].location.lat,
                     lng: v[p].location.lng,
-                    url: v[p].url
+                    url: v[p].url,
+                    marker: m
                 }));
-                var m = new google.maps.Marker({
-                    position: new google.maps.LatLng(v[p].location.lat, v[p].location.lng),
-                    map: self.map,
-                    title: v[p].name
-                });
-                self.markers.push({v[p].id: m});
             }
         }
     }
