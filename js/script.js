@@ -1,3 +1,4 @@
+//http://www.uiparade.com/portfolio/natural-search-bar/
 //http://www.w3schools.com/googleapi/tryit.asp?filename=tryhtml_map_marker_infowindow
 //http://www.w3schools.com/googleapi/tryit.asp?filename=tryhtml_map_marker_infowindow2
 //http://stackoverflow.com/questions/9309251/google-maps-javascript-api-get-gps-coordinates-from-address
@@ -169,3 +170,20 @@ var ViewModel = function () {
 }
 var vm = new ViewModel();
 ko.applyBindings(vm);
+
+
+var isListVisible = false;
+jQuery(document).ready(function ($) {
+    //open the lateral panel
+    $('.list-btn').on('click', function (event) {
+        event.preventDefault();
+        if (!isListVisible) {
+            $('.list-panel').addClass('is-visible');
+            $('.list-btn').text('[-]');
+        } else {
+            $('.list-panel').removeClass('is-visible');
+            $('.list-btn').text('[+]');
+        }
+        isListVisible = !isListVisible;
+    });
+});
