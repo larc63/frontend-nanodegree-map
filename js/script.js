@@ -147,6 +147,27 @@ var ViewModel = function () {
                     map: self.map,
                     title: v[p].name
                 });
+                var contentString = '<div class=\'place-pop-up\'>' +
+                    '<div class=\'place-title\'>' +
+                    '<div class=\'place-name\'>Name</div>' +
+                    '</div>' +
+                    '<div>Some Address</div>' +
+                    '<div>website</div>' +
+                    '<div>Google Rating:' +
+                    '<div class=\'numericrating\'><span class="stars">3.6</span> 3.6</div>' +
+                    '</div>' +
+                    '<div>Yelp Rating:' +
+                    '<div class=\'numericrating\'><span class="stars">3.6</span> 3.6</div>' +
+                    '</div>' +
+                    '</div>'
+
+                var infowindow = new google.maps.InfoWindow({
+                    content: contentString
+                });
+                google.maps.event.addListener(m, 'click', function () {
+                    infowindow.open(self.map, m);
+                });
+
                 self.places.push(new Place({
                     id: v[p].id,
                     name: v[p].name,
