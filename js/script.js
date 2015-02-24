@@ -10,7 +10,13 @@
 // fiddle for the modal http://jsfiddle.net/y5g8zg1b/24/
 // slide in panel from http://codyhouse.co/gem/css-slide-in-panel/
 // fiddle for the slide in panel http://jsfiddle.net/8fzz7ud1/
-// fiddle for a simplified slide in panel http://jsfiddle.net/7L8hgp8v/
+//  -- >>>  fiddle for a simplified slide in panel http://jsfiddle.net/7L8hgp8v/15/   <<<< ---- 
+// tab view http://codyhouse.co/gem/responsive-tabbed-navigation/
+// http://stackoverflow.com/questions/6794405/trigger-google-maps-marker-click
+// better, lighter tabs: http://css-tricks.com/functional-css-tabs-revisited/
+// interesting take on slides; http://jsfiddle.net/jacobdubail/bKaxg/7/
+// image gallery from here http://www.elated.com/articles/elegant-sliding-image-gallery-with-jquery/
+//
 //var NYT_KEY = "1b5ac26e8f1655981150f5e4d70bab71:9:70863163";	
 //var NYT_BASE_URL = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=";
 //
@@ -105,6 +111,44 @@ var Place = function (data) {
 //View Model
 var ViewModel = function () {
     var self = this;
+    function createInfoWindow() {
+        var contentString = '<div class=\'place-pop-up\'>' +
+            '        <div class=\'place-title\'>' +
+            '            <div class=\'place-name\'>Name</div>' +
+            '        </div>' +
+            '        <div>Some Address</div>' +
+            '        <div>website</div>' +
+            '        <div>Google Rating:' +
+            '            <div class=\'numericrating\'><span class=\'stars\'>3.6</span> 3.6</div>' +
+            '        </div>' +
+            '        <div>Yelp Rating:' +
+            '            <div class=\'numericrating\'><span class=\'stars\'>3.6</span> 3.6</div>' +
+            '        </div>' +
+            '        <div class=\'tabs\'>' +
+            '            <div class=\'tab\'>' +
+            '                <input type=\'radio\' id=\'tab-1\' name=\'tab-group-1\' checked />' +
+            '                <label for=\'tab-1\'>Street View</label>' +
+            '                <div class=\'tab-content\'>' +
+            '                    <div id=\'galleryContainer\'>' +
+            '                        <div id=\'gallery\'>' +
+            '                            <img src=\'http://placehold.it/350x350\' alt=\'Barbed Wire\' height=\'128px\' />' +
+            '                        </div>' +
+            '                    </div>' +
+            '                </div>' +
+            '            </div>' +
+            '            <div class=\'tab\'>' +
+            '                <input type=\'radio\' id=\'tab-2\' name=\'tab-group-1\' />' +
+            '                <label for=\'tab-2\'>Tab Two</label>' +
+            '                <div class=\'tab-content\'>stuff 2</div>' +
+            '            </div>' +
+            '        </div>' +
+            '    </div>';
+
+        return infowindow = new google.maps.InfoWindow({
+            content: contentString
+        });
+    };
+
     //    self.coder = new google.maps.Geocoder(); .. not needed until the "change neighborhood feature is implemented
     var mapOptions = {
         center: {
@@ -119,6 +163,8 @@ var ViewModel = function () {
     self.places = ko.observableArray([]);
     self.markers = ko.observableArray([]);
     self.map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+    self.infoWindow = createInfoWindow();
+
     self.centerMarker = new google.maps.Marker({
         position: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG),
         map: self.map,
@@ -138,6 +184,28 @@ var ViewModel = function () {
         }, 1000);
     });
 
+    function createMarkerListener(m) {
+        google.maps.event.addListener(m, 'click', function () {
+            infowindow.open(self.map, m);
+            $.fn.stars = function () {
+                return $(this).each(function () {
+                    // Get the value
+                    var val = parseFloat($(this).html());
+                    // Make sure that the value is in 0 - 5 range, multiply to get width
+                    var size = Math.max(0, (Math.min(5, val))) * 16;
+                    // Create stars holder
+                    var $span = $('<span />').width(size);
+                    // Replace the numerical value with stars
+                    $(this).html($span);
+                });
+            }
+
+            $(function () {
+                $('span.stars').stars();
+            });
+        });
+    }
+
     self.parseFourSquareResults = function (data) {
         if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
             var v = data.response.venues;
@@ -147,26 +215,8 @@ var ViewModel = function () {
                     map: self.map,
                     title: v[p].name
                 });
-                var contentString = '<div class=\'place-pop-up\'>' +
-                    '<div class=\'place-title\'>' +
-                    '<div class=\'place-name\'>Name</div>' +
-                    '</div>' +
-                    '<div>Some Address</div>' +
-                    '<div>website</div>' +
-                    '<div>Google Rating:' +
-                    '<div class=\'numericrating\'><span class="stars">3.6</span> 3.6</div>' +
-                    '</div>' +
-                    '<div>Yelp Rating:' +
-                    '<div class=\'numericrating\'><span class="stars">3.6</span> 3.6</div>' +
-                    '</div>' +
-                    '</div>'
 
-                var infowindow = new google.maps.InfoWindow({
-                    content: contentString
-                });
-                google.maps.event.addListener(m, 'click', function () {
-                    infowindow.open(self.map, m);
-                });
+                createMarkerListener(m);
 
                 self.places.push(new Place({
                     id: v[p].id,
