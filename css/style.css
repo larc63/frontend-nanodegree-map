@@ -252,3 +252,6 @@ span.stars span {
 [type=radio]:checked ~ label ~ .tab-content {
     z-index: 1;
 }
+.not-visible{
+    display: none;
+}

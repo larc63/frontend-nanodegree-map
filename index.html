@@ -8,6 +8,38 @@
 </head>
 
 <body>
+    <div id='template' class="not-visible">
+        <div class='place-pop-up' data-bind="with:currentPlace">
+            <div class='place-title'>
+                <div class='place-name' data-bind="text: name"></div>
+            </div>
+            <div data-bind="text: address"></div>
+            <div data-bind="text: phone"></div>
+            <div>
+                <a data-bind="text: url, attr: {href: url}"></a>
+            </div>
+            <div>
+                <div>Google Rating:
+                    <div class='numericrating'><span class='stars'>3.6</span> 3.6</div>
+                </div>
+            </div>
+            <div class='tabs'>
+                <div class='tab'>
+                    <input type='radio' id='tab-1' name='tab-group-1' checked />
+                    <label for='tab-1'>Street View</label>
+                    <div class='tab-content'>
+                    </div>
+                </div>
+                <div class='tab'>
+                    <input type='radio' id='tab-2' name='tab-group-1' />
+                    <label for='tab-2'>Tab Two</label>
+                    <div class='tab-content'>
+                        <img src='http://placehold.it/350x350' alt='Barbed Wire' height='128px' />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="map-canvas">
     </div>
     <div class="formdiv">

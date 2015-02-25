@@ -10,7 +10,7 @@
 // fiddle for the modal http://jsfiddle.net/y5g8zg1b/24/
 // slide in panel from http://codyhouse.co/gem/css-slide-in-panel/
 // fiddle for the slide in panel http://jsfiddle.net/8fzz7ud1/
-//  -- >>>  fiddle for a simplified slide in panel http://jsfiddle.net/7L8hgp8v/15/   <<<< ---- 
+//  -- >>>  fiddle for a simplified slide in panel http://jsfiddle.net/7L8hgp8v/17/   <<<< ---- 
 // tab view http://codyhouse.co/gem/responsive-tabbed-navigation/
 // http://stackoverflow.com/questions/6794405/trigger-google-maps-marker-click
 // better, lighter tabs: http://css-tricks.com/functional-css-tabs-revisited/
@@ -93,63 +93,10 @@ var DEFAULT_LAT = 32.9531079;
 var DEFAULT_LNG = -96.8229146;
 var DEFAULT_ZOOM = 17;
 var FOURSQUARE_BASE_URL = "https://api.foursquare.com/v2/venues/search?oauth_token=C5YVRDGQGZLXH2SVONVBTXHZRYDBDDO4B5JLHQYEENJSFWS4&v=20150223&ll="; //
+var GOOGLE_SV_BASE_URL = 'http://maps.googleapis.com/maps/api/streetview?size=640x400&location=';
 
-//Model: Place
-
-var Place = function (data) {
-    this.id = data.id;
-    this.name = data.name;
-    this.address = data.address;
-    this.phone = data.phone;
-    this.lat = data.lat;
-    this.lng = data.lng;
-    this.marker = data.marker;
-
-    console.log("created place object: " + this.name);
-}
-
-//View Model
-var ViewModel = function () {
-    var self = this;
-    function createInfoWindow() {
-        var contentString = '<div class=\'place-pop-up\'>' +
-            '        <div class=\'place-title\'>' +
-            '            <div class=\'place-name\'>Name</div>' +
-            '        </div>' +
-            '        <div>Some Address</div>' +
-            '        <div>website</div>' +
-            '        <div>Google Rating:' +
-            '            <div class=\'numericrating\'><span class=\'stars\'>3.6</span> 3.6</div>' +
-            '        </div>' +
-            '        <div>Yelp Rating:' +
-            '            <div class=\'numericrating\'><span class=\'stars\'>3.6</span> 3.6</div>' +
-            '        </div>' +
-            '        <div class=\'tabs\'>' +
-            '            <div class=\'tab\'>' +
-            '                <input type=\'radio\' id=\'tab-1\' name=\'tab-group-1\' checked />' +
-            '                <label for=\'tab-1\'>Street View</label>' +
-            '                <div class=\'tab-content\'>' +
-            '                    <div id=\'galleryContainer\'>' +
-            '                        <div id=\'gallery\'>' +
-            '                            <img src=\'http://placehold.it/350x350\' alt=\'Barbed Wire\' height=\'128px\' />' +
-            '                        </div>' +
-            '                    </div>' +
-            '                </div>' +
-            '            </div>' +
-            '            <div class=\'tab\'>' +
-            '                <input type=\'radio\' id=\'tab-2\' name=\'tab-group-1\' />' +
-            '                <label for=\'tab-2\'>Tab Two</label>' +
-            '                <div class=\'tab-content\'>stuff 2</div>' +
-            '            </div>' +
-            '        </div>' +
-            '    </div>';
-
-        return infowindow = new google.maps.InfoWindow({
-            content: contentString
-        });
-    };
-
-    //    self.coder = new google.maps.Geocoder(); .. not needed until the "change neighborhood feature is implemented
+//Helper functions
+function createMap() {
     var mapOptions = {
         center: {
             lat: DEFAULT_LAT,
@@ -160,83 +107,158 @@ var ViewModel = function () {
         panControl: false,
         streetViewControl: false
     };
-    self.places = ko.observableArray([]);
-    self.markers = ko.observableArray([]);
-    self.map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-    self.infoWindow = createInfoWindow();
+    var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
-    self.centerMarker = new google.maps.Marker({
-        position: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG),
-        map: self.map,
-        title: 'Click to zoom'
+    //    google.maps.event.addListener(map, 'click', function (event) {
+    //        var lat = event.latLng.k;
+    //        var lng = event.latLng.D;
+    //    });
+    return map;
+};
+
+function createInfoWindow() {
+    var contentString = '<div></div>';
+    console.log(contentString);
+    return new google.maps.InfoWindow({
+        content: contentString
     });
+};
 
-    google.maps.event.addListener(self.map, 'click', function (event) {
-        var lat = event.latLng.k;
-        var lng = event.latLng.D;
+function getAjaxFromURL(url, callback) {
+    $.getJSON(url, function (data) {
+        callback(data);
+    }).error(function () {
+        console.error("could not load data from " + url);
     });
+};
 
-    google.maps.event.addListener(self.map, 'center_changed', function () {
-        // 3 seconds after the center of the map has changed, pan back to the
-        // marker.
-        window.setTimeout(function () {
-            self.map.panTo(self.centerMarker.getPosition());
-        }, 1000);
-    });
-
-    function createMarkerListener(m) {
-        google.maps.event.addListener(m, 'click', function () {
-            infowindow.open(self.map, m);
-            $.fn.stars = function () {
-                return $(this).each(function () {
-                    // Get the value
-                    var val = parseFloat($(this).html());
-                    // Make sure that the value is in 0 - 5 range, multiply to get width
-                    var size = Math.max(0, (Math.min(5, val))) * 16;
-                    // Create stars holder
-                    var $span = $('<span />').width(size);
-                    // Replace the numerical value with stars
-                    $(this).html($span);
-                });
-            }
-
-            $(function () {
-                $('span.stars').stars();
+function parseFourSquareResults(data) {
+    if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
+        var v = data.response.venues;
+        for (p in v) {
+            var m = new google.maps.Marker({
+                position: new google.maps.LatLng(v[p].location.lat, v[p].location.lng),
+                map: vm.map,
+                title: v[p].name
             });
-        });
-    }
 
-    self.parseFourSquareResults = function (data) {
-        if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
-            var v = data.response.venues;
-            for (p in v) {
-                var m = new google.maps.Marker({
-                    position: new google.maps.LatLng(v[p].location.lat, v[p].location.lng),
-                    map: self.map,
-                    title: v[p].name
-                });
+            vm.places.push(new Place({
+                id: v[p].id,
+                name: v[p].name,
+                phone: v[p].contact.formattedPhone,
+                address: v[p].location.formattedAddress,
+                lat: v[p].location.lat,
+                lng: v[p].location.lng,
+                url: v[p].url,
+                marker: m
+            }));
 
-                createMarkerListener(m);
-
-                self.places.push(new Place({
-                    id: v[p].id,
-                    name: v[p].name,
-                    phone: v[p].contact.formattedPhone,
-                    address: v[p].location.formattedAddress,
-                    lat: v[p].location.lat,
-                    lng: v[p].location.lng,
-                    url: v[p].url,
-                    marker: m
-                }));
-            }
+            createMarkerListener(m);
         }
     }
+};
 
-    $.getJSON(FOURSQUARE_BASE_URL + DEFAULT_LAT + "," + DEFAULT_LNG, function (data) {
-        self.parseFourSquareResults(data);
-    }).error(function () {
-        console.log("could not load foursquare data");
+function getStreetViewContent() {
+    vm.currentPlace().details.push({
+        name: "Street View",
+        value: "<div id=\"pano\"></div>"
     });
+    var panoramaOptions = {
+        position: new google.maps.LatLng(vm.currentPlace().lat(), vm.currentPlace().lng()),
+        pov: {
+            heading: 34,
+            pitch: 10
+        }
+    };
+//    var panorama = new google.maps.StreetViewPanorama(document.getElementById('pano'), panoramaOptions);
+//    vm.map.setStreetView(panorama);
+};
+
+function createMarkerListener(m) {
+    google.maps.event.addListener(m, 'click', function () {
+        for (p in vm.places()) {
+            if (m === vm.places()[p].marker) {
+                vm.currentPlace(vm.places()[p]);
+            }
+        }
+        
+        
+//        vm.infoWindow.setContent(contentString);
+        vm.infoWindow.setContent($('#template').html());
+        vm.infoWindow.open(vm.map, m);
+        getStreetViewContent();
+
+
+        $.fn.stars = function () {
+            return $(this).each(function () {
+                // Get the value
+                var val = parseFloat($(this).html());
+                // Make sure that the value is in 0 - 5 range, multiply to get width
+                var size = Math.max(0, (Math.min(5, val))) * 16;
+                // Create stars holder
+                var $span = $('<span />').width(size);
+                // Replace the numerical value with stars
+                $(this).html($span);
+            });
+        }
+    });
+}
+
+//Model: Content
+var SimpleContent = function (data) {
+    this.name = ko.observable();
+    this.value = ko.observable();
+    this.computedValue = ko.computed(function () {
+        return this.value();
+    }, this);
+}
+
+var GalleryContent = function (data) {
+    this.name = ko.observable();
+    this.values = ko.observableArray([]);
+    this.computedValue = ko.computed(function () {
+        var retVal = new Array();
+        var valuesArray = this.values();
+        for (v in valuesArray) {
+            retVal.push("<img src=\'");
+            retVal.push(vauluesArray[v]);
+            retVal.push("\' />\n");
+        }
+
+    }, this);
+};
+
+//Model: Place
+
+var Place = function (data) {
+    this.id = ko.observable(data.id);
+    this.name = ko.observable(data.name);
+    this.address = ko.observable(data.address);
+    this.phone = ko.observable(data.phone);
+    this.url = ko.observable(data.url);
+    this.lat = ko.observable(data.lat);
+    this.lng = ko.observable(data.lng);
+    this.marker = data.marker;
+    this.details = ko.observableArray([]);
+
+    console.log("created place object: " + this.name() + " at " + this.lat() + "," + this.lng());
+}
+
+//View Model
+var ViewModel = function () {
+    var self = this;
+    //    self.coder = new google.maps.Geocoder(); .. not needed until the "change neighborhood feature is implemented
+    self.dummy = ko.observable("Hello");
+    self.places = ko.observableArray([]);
+    self.markers = ko.observableArray([]);
+    self.currentPlace = ko.observable();
+    self.map = createMap();
+    self.infoWindow = createInfoWindow();
+
+    var fourSquareURL = FOURSQUARE_BASE_URL + DEFAULT_LAT + "," + DEFAULT_LNG;
+
+    getAjaxFromURL(fourSquareURL, parseFourSquareResults);
+
 
 }
 var vm = new ViewModel();
