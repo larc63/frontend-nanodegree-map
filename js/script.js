@@ -92,7 +92,7 @@
 var DEFAULT_LAT = 32.9531079;
 var DEFAULT_LNG = -96.8229146;
 var DEFAULT_ZOOM = 17;
-var FOURSQUARE_BASE_URL = "https://api.foursquare.com/v2/venues/search?oauth_token=C5YVRDGQGZLXH2SVONVBTXHZRYDBDDO4B5JLHQYEENJSFWS4&v=20150223&ll="; //
+var FOURSQUARE_BASE_URL = "https://api.foursquare.com/v2/venues/explore?oauth_token=C5YVRDGQGZLXH2SVONVBTXHZRYDBDDO4B5JLHQYEENJSFWS4&v=20150223&ll="; //
 var GOOGLE_SV_BASE_URL = 'http://maps.googleapis.com/maps/api/streetview?size=640x400&location=';
 
 //Helper functions
@@ -134,22 +134,24 @@ function getAjaxFromURL(url, callback) {
 
 function parseFourSquareResults(data) {
     if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
-        var v = data.response.venues;
+        var v = data.response.groups[0].items;
         for (p in v) {
+            var venue = v[p].venue;
             var m = new google.maps.Marker({
-                position: new google.maps.LatLng(v[p].location.lat, v[p].location.lng),
+                position: new google.maps.LatLng(venue.location.lat, venue.location.lng),
                 map: vm.map,
-                title: v[p].name
+                title: venue.name
             });
 
             vm.places.push(new Place({
-                id: v[p].id,
-                name: v[p].name,
-                phone: v[p].contact.formattedPhone,
-                address: v[p].location.formattedAddress,
-                lat: v[p].location.lat,
-                lng: v[p].location.lng,
-                url: v[p].url,
+                id: venue.id,
+                name: venue.name,
+                phone: venue.contact.formattedPhone,
+                address: venue.location.formattedAddress,
+                lat: venue.location.lat,
+                lng: venue.location.lng,
+                url: venue.url,
+                rating: venue.rating,
                 marker: m
             }));
 
@@ -159,19 +161,16 @@ function parseFourSquareResults(data) {
 };
 
 function getStreetViewContent() {
+    var a = vm.currentPlace().details();
+    for (d in a) {
+        if (a[d].name === "Street View") {
+            return;
+        }
+    }
     vm.currentPlace().details.push({
         name: "Street View",
-        value: "<div id=\"pano\"></div>"
+        value: "<img src=\"" + GOOGLE_SV_BASE_URL + vm.currentPlace().lat() + "," + vm.currentPlace().lng() + "\" alt=\"Streetview image\" />"
     });
-    var panoramaOptions = {
-        position: new google.maps.LatLng(vm.currentPlace().lat(), vm.currentPlace().lng()),
-        pov: {
-            heading: 34,
-            pitch: 10
-        }
-    };
-//    var panorama = new google.maps.StreetViewPanorama(document.getElementById('pano'), panoramaOptions);
-//    vm.map.setStreetView(panorama);
 };
 
 function createMarkerListener(m) {
@@ -181,13 +180,10 @@ function createMarkerListener(m) {
                 vm.currentPlace(vm.places()[p]);
             }
         }
-        
-        
-//        vm.infoWindow.setContent(contentString);
-        vm.infoWindow.setContent($('#template').html());
-        vm.infoWindow.open(vm.map, m);
-        getStreetViewContent();
 
+
+        //        vm.infoWindow.setContent(contentString);
+        getStreetViewContent();
 
         $.fn.stars = function () {
             return $(this).each(function () {
@@ -201,6 +197,12 @@ function createMarkerListener(m) {
                 $(this).html($span);
             });
         }
+        $(function () {
+            $('span.stars').stars();
+        });
+        
+        vm.infoWindow.setContent($('#template').html());
+        vm.infoWindow.open(vm.map, m);
     });
 }
 
@@ -233,14 +235,26 @@ var GalleryContent = function (data) {
 var Place = function (data) {
     this.id = ko.observable(data.id);
     this.name = ko.observable(data.name);
-    this.address = ko.observable(data.address);
+    if (data.address) {
+        this.address = ko.observable("");
+        for (a in data.address) {
+            this.address(this.address() + data.address[a] + "<br/>");
+        }
+    }
+
     this.phone = ko.observable(data.phone);
     this.url = ko.observable(data.url);
     this.lat = ko.observable(data.lat);
     this.lng = ko.observable(data.lng);
     this.marker = data.marker;
     this.details = ko.observableArray([]);
-
+    this.ratings = ko.observableArray([]);
+    if (data.rating) {
+        this.ratings.push({
+            name: "Foursquare Rating",
+            rating: data.rating / 2.0
+        });
+    }
     console.log("created place object: " + this.name() + " at " + this.lat() + "," + this.lng());
 }
 
