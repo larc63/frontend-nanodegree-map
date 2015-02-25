@@ -160,7 +160,7 @@ button {
     background: white;
     border: 1px;
     border-color: black;
-    width: 800px;
+    width: 850px;
     height: 600px;
     padding: 9px;
     background-color: #fff;
@@ -231,6 +231,7 @@ span.stars span {
     position: absolute;
     top: 28px;
     height: 430px;
+    width: 600px;
     left: 0;
     background: white;
     right: 0;

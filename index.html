@@ -8,31 +8,6 @@
 </head>
 
 <body>
-    <div id='template' class="not-visible">
-        <div class='place-pop-up' data-bind="with:currentPlace">
-            <div class='place-title'>
-                <div class='place-name' data-bind="text: name"></div>
-            </div>
-            <div data-bind="html: address"></div>
-            <div data-bind="text: phone"></div>
-            <div>
-                <a data-bind="text: url, attr: {href: url}"></a>
-            </div>
-            <div data-bind="foreach: ratings">
-                <div><span data-bind="text: name"></span>
-                    <div class='numericrating'><span class='stars' data-bind="text: rating"></span></div>
-                </div>
-            </div>
-            <div class='tabs' data-bind="foreach: details">
-                <div class='tab'>
-                    <input type='radio' id='tab-1' name='tab-group-1' />
-                    <label for='tab-1' data-bind="text: name"></label>
-                    <div class='tab-content' data-bind="html: value">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <div id="map-canvas">
     </div>
     <div class="formdiv">
@@ -56,6 +31,31 @@
         </div>
     </div>
 
+    <div id='template' class="not-visible">
+        <div class='place-pop-up' data-bind="with:currentPlace">
+            <div class='place-title'>
+                <div class='place-name' data-bind="text: name"></div>
+            </div>
+            <div data-bind="html: address"></div>
+            <div data-bind="text: phone"></div>
+            <div>
+                <a data-bind="text: url, attr: {href: url}"></a>
+            </div>
+            <div data-bind="foreach: ratings">
+                <div><span data-bind="text: name"></span>
+                    <div class='numericrating'><span class='stars' data-bind="text: rating"></span></div>
+                </div>
+            </div>
+            <div class='tabs' data-bind="foreach: details">
+                <div class='tab'>
+                    <input type='radio' name='PlaceDetails' data-bind="attr: {value: $index, id: 'tab'+$index()}, checked:$parent.selectedTab()" />
+                    <label data-bind="attr:{for: 'tab'+$index()}, text: name"></label>
+                    <div class='tab-content' data-bind="html: value">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBQ7Uhj2LmBn2yDp488Zh1YZCXB0ObiLM0"></script>

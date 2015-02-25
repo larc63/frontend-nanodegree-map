@@ -200,35 +200,20 @@ function createMarkerListener(m) {
         $(function () {
             $('span.stars').stars();
         });
-        
+
         vm.infoWindow.setContent($('#template').html());
         vm.infoWindow.open(vm.map, m);
+
+        setTimeout(function () {
+
+            vm.currentPlace().details.push({
+                name: "Another View",
+                value: "Some Other Content"
+            });
+            vm.infoWindow.setContent($('#template').html());
+        }, 500);
     });
 }
-
-//Model: Content
-var SimpleContent = function (data) {
-    this.name = ko.observable();
-    this.value = ko.observable();
-    this.computedValue = ko.computed(function () {
-        return this.value();
-    }, this);
-}
-
-var GalleryContent = function (data) {
-    this.name = ko.observable();
-    this.values = ko.observableArray([]);
-    this.computedValue = ko.computed(function () {
-        var retVal = new Array();
-        var valuesArray = this.values();
-        for (v in valuesArray) {
-            retVal.push("<img src=\'");
-            retVal.push(vauluesArray[v]);
-            retVal.push("\' />\n");
-        }
-
-    }, this);
-};
 
 //Model: Place
 
@@ -247,6 +232,7 @@ var Place = function (data) {
     this.lat = ko.observable(data.lat);
     this.lng = ko.observable(data.lng);
     this.marker = data.marker;
+    this.selectedTab = ko.observable();
     this.details = ko.observableArray([]);
     this.ratings = ko.observableArray([]);
     if (data.rating) {
@@ -270,7 +256,6 @@ var ViewModel = function () {
     self.infoWindow = createInfoWindow();
 
     var fourSquareURL = FOURSQUARE_BASE_URL + DEFAULT_LAT + "," + DEFAULT_LNG;
-
     getAjaxFromURL(fourSquareURL, parseFourSquareResults);
 
 
