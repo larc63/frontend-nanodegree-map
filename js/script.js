@@ -16,6 +16,7 @@
 // better, lighter tabs: http://css-tricks.com/functional-css-tabs-revisited/
 // interesting take on slides; http://jsfiddle.net/jacobdubail/bKaxg/7/
 // image gallery from here http://www.elated.com/articles/elegant-sliding-image-gallery-with-jquery/
+// https://developers.google.com/maps/documentation/javascript/reference#PlaceResult -- get the place id so that  we can get the photos afterwards
 //
 //var NYT_KEY = "1b5ac26e8f1655981150f5e4d70bab71:9:70863163";	
 //var NYT_BASE_URL = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=";
@@ -173,6 +174,15 @@ function getStreetViewContent() {
     });
 };
 
+function processGoogleImageResults(results, status) {
+if (status == google.maps.places.PlacesServiceStatus.OK) {
+    for (var i = 0; i < results.length; i++) {
+      var place = results[i];
+      createMarker(results[i]);
+    }
+  }
+};
+
 function createMarkerListener(m) {
     google.maps.event.addListener(m, 'click', function () {
         for (p in vm.places()) {
@@ -204,14 +214,48 @@ function createMarkerListener(m) {
         vm.infoWindow.setContent($('#template').html());
         vm.infoWindow.open(vm.map, m);
 
-        setTimeout(function () {
+        var flickerAPI = "http://api.flickr.com/services/feeds/photos_public.gne?jsoncallback=?";
+        $.getJSON(flickerAPI, {
+                tag: vm.currentPlace().name(), // + " " + vm.currentPlace().address(),
+                tagmode: "any",
+                format: "json",
+                lat: vm.currentPlace().lat(),
+                lon: vm.currentPlace().lng(),
+                radius: 1,
+                radius_units: "km"
+            })
+            .done(function (data) {
+                var images = "";
+                $.each(data.items, function (i, item) {
+                    images += "<img src=\"" + item.media.m + "\" />";
+                    //                    $("<img>").attr("src", item.media.m).appendTo("#images");
 
-            vm.currentPlace().details.push({
-                name: "Another View",
-                value: "Some Other Content"
+                    if (i === 10) {
+                        return false;
+                    }
+                });
+                vm.currentPlace().details.push({
+                    name: "Flickr",
+                    value: images
+                });
+                vm.infoWindow.setContent($('#template').html());
             });
-            vm.infoWindow.setContent($('#template').html());
-        }, 500);
+        var request = {
+            location: new google.maps.LatLng(vm.currentPlace().lat(), vm.currentPlace().lng()),
+            radius: '500',
+            name: vm.currentPlace().name()
+        };
+
+        var service = new google.maps.places.PlacesService(vm.map);
+        service.nearbySearch(request, processGoogleImageResults);
+        //        setTimeout(function () {
+        //
+        //            vm.currentPlace().details.push({
+        //                name: "Another View",
+        //                value: "Some Other Content"
+        //            });
+        //            vm.infoWindow.setContent($('#template').html());
+        //        }, 500);
     });
 }
 
