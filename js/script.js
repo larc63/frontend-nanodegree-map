@@ -18,76 +18,6 @@
 // image gallery from here http://www.elated.com/articles/elegant-sliding-image-gallery-with-jquery/
 // https://developers.google.com/maps/documentation/javascript/reference#PlaceResult -- get the place id so that  we can get the photos afterwards
 //
-//var NYT_KEY = "1b5ac26e8f1655981150f5e4d70bab71:9:70863163";	
-//var NYT_BASE_URL = "http://api.nytimes.com/svc/search/v2/articlesearch.json?q=";
-//
-//function loadData() {
-//
-//    var $body = $('body');
-//    var $wikiElem = $('#wikipedia-links');
-//    var $nytHeaderElem = $('#nytimes-header');
-//    var $nytElem = $('#nytimes-articles');
-//    var $greeting = $('#greeting');
-//    var $street = $('#street');
-//    var $city = $('#city');
-//    
-//    // clear out old data before new request
-//    $wikiElem.text("");
-//    $nytElem.text("");
-//
-//    // load streetview
-//    var streetStr = $street.val();
-//    var cityStr = $city.val();
-//    var address = streetStr + ', ' + cityStr;
-//    var streetviewUrl = 'http://maps.googleapis.com/maps/api/streetview?size=640x400&location=' + encodeURI(address) + '';
-//    $body.append('<img class="bgimg" src="' + streetviewUrl + '">');
-//    
-//    // YOUR CODE GOES HERE!
-//
-//    return false;
-//};
-//
-//$('#form-container').submit(loadData);
-//
-////loadData();
-//
-//$.getJSON(NYT_BASE_URL + "obama&api-key=" + NYT_KEY, function (data) {
-//    var items = [];
-//    var articles = data.response.docs;
-//
-//    $.each(articles, function (key, val) {
-//        items.push("<li id='" + articles[key]._id + "' class='article'><a href='" + articles[key].web_url + "'>" + articles[key].headline.main + "</a><p>" + articles[key].snippet + "</p></li>");
-//    });
-//
-//    $("<ul/>", {
-//        html: items.join("")
-//    }).appendTo("#nytimes-articles");
-//}).error(function () {
-//    $("<p>NYT Articles Could not be loaded</p>").appendTo("#nytimes-articles");
-//});
-//
-//
-//(function() {
-//  var $wikiElem = $('#wikipedia-links');
-//  var wikiRequestTimeout = setTimeout(function(){
-//    $wikiElem.text("failed to get wikipedia resources");
-//  }, 8000);
-//  var flickerAPI = "http://en.wikipedia.org/w/api.php?format=json&action=opensearch&search=Obama";
-//  $.ajax( {
-//    url: flickerAPI,
-//    dataType:'jsonp',
-//    type:'POST',
-//    success: function(data){
-//      var articleList = data[1];
-//      for(var i = 0; i< articleList.length; i++){
-//	var url = 'http://en.wikipedia.org/wiki/' + articleList[1];
-//	$wikiElem.append('<li><a href="' + url + '">' + articleList[1] + '</a></li>');
-//      }
-//      clearTimeout(wikiRequestTimeout);
-//    },
-//    headers: { 'Api-User-Agent-Udacity': 'Example/1.0' }
-//});
-//})();
 
 //Globals
 var DEFAULT_LAT = 32.9531079;
@@ -95,8 +25,9 @@ var DEFAULT_LNG = -96.8229146;
 var DEFAULT_ZOOM = 17;
 var FOURSQUARE_BASE_URL = "https://api.foursquare.com/v2/venues/explore?oauth_token=C5YVRDGQGZLXH2SVONVBTXHZRYDBDDO4B5JLHQYEENJSFWS4&v=20150223&ll="; //
 var GOOGLE_SV_BASE_URL = 'http://maps.googleapis.com/maps/api/streetview?size=640x400&location=';
+var FLICKR_BASE_URL = "https://api.flickr.com/services/rest/?method=flickr.photos."
+    //Helper functions
 
-//Helper functions
 function createMap() {
     var mapOptions = {
         center: {
@@ -175,12 +106,24 @@ function getStreetViewContent() {
 };
 
 function processGoogleImageResults(results, status) {
-if (status == google.maps.places.PlacesServiceStatus.OK) {
-    for (var i = 0; i < results.length; i++) {
-      var place = results[i];
-      createMarker(results[i]);
+    if (status == google.maps.places.PlacesServiceStatus.OK) {
+        for (var i = 0; i < results.length; i++) {
+            var place = results[i];
+            if (place.name === vm.currentPlace().name()) {
+                vm.currentPlace().googleplaceid = place.place_id;
+                vm.currentPlace().ratings.push({
+                    name: "Google Rating",
+                    rating: place.rating
+                });
+
+                $(function () {
+                    $('span.stars').stars();
+                });
+                vm.infoWindow.setContent($('#template').html());
+                break;
+            }
+        }
     }
-  }
 };
 
 function createMarkerListener(m) {
@@ -195,50 +138,74 @@ function createMarkerListener(m) {
         //        vm.infoWindow.setContent(contentString);
         getStreetViewContent();
 
-        $.fn.stars = function () {
-            return $(this).each(function () {
-                // Get the value
-                var val = parseFloat($(this).html());
-                // Make sure that the value is in 0 - 5 range, multiply to get width
-                var size = Math.max(0, (Math.min(5, val))) * 16;
-                // Create stars holder
-                var $span = $('<span />').width(size);
-                // Replace the numerical value with stars
-                $(this).html($span);
-            });
-        }
         $(function () {
             $('span.stars').stars();
         });
 
         vm.infoWindow.setContent($('#template').html());
         vm.infoWindow.open(vm.map, m);
-
-        var flickerAPI = "http://api.flickr.com/services/feeds/photos_public.gne?jsoncallback=?";
-        $.getJSON(flickerAPI, {
-                tag: vm.currentPlace().name(), // + " " + vm.currentPlace().address(),
-                tagmode: "any",
-                format: "json",
-                lat: vm.currentPlace().lat(),
-                lon: vm.currentPlace().lng(),
-                radius: 1,
-                radius_units: "km"
-            })
+        //var FLICKR_BASE_URL = "https://api.flickr.com/services/rest/?method=flickr.photos."        
+        //"https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=536b7dd52fb0348e3cb6e94d02f94b95&text=texas+do+brasil&format=json&nojsoncallback=1&api_sig=e6dcd09ce52cb3b022676812edbfcf2d"
+        var flickrAPI = FLICKR_BASE_URL + "search&jsoncallback=?";
+        console.log("getting images from:" + flickrAPI);
+        $.getJSON(flickrAPI, {
+            text: vm.currentPlace().name(),
+            lat: vm.currentPlace().lat(),
+            lon: vm.currentPlace().lng(),
+            format: "json",
+            api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
+        })
             .done(function (data) {
                 var images = "";
-                $.each(data.items, function (i, item) {
-                    images += "<img src=\"" + item.media.m + "\" />";
-                    //                    $("<img>").attr("src", item.media.m).appendTo("#images");
+                var a = data.photos.photo;
+                var getSizesURL = FLICKR_BASE_URL + "getSizes&jsoncallback=?";
+                var photosExpected = a.length;
+                var photosReceived = 0;
+                for (var i in a) {
+                    console.log("getting sizes from: " + getSizesURL);
+                    $.getJSON(getSizesURL, {
+                        photo_id: a[i].id,
+                        format: "json",
+                        api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
+                    })
+                        .done(function (data) {
+                            var sizes = data.sizes.size;
+                            var availableSizes = [];
+                            var sizeIndex = -1;
+                            photosReceived++;
+                            for (var s in sizes) {
+                                availableSizes.push(sizes[s].label);
+                            }
+                            sizeIndex = availableSizes.indexOf("Medium");
+                            if (sizeIndex === -1) {
+                                sizeIndex = availableSizes.indexOf("Medium 640");
+                            }
+                            if (sizeIndex === -1) {
+                                sizeIndex = availableSizes.indexOf("Medium 800");
+                            }
+                            if (sizeIndex !== -1) {
+                                images += "<img src=\"" + sizes[sizeIndex].source + "\" />";
+                            }
 
-                    if (i === 10) {
-                        return false;
-                    }
-                });
-                vm.currentPlace().details.push({
-                    name: "Flickr",
-                    value: images
-                });
-                vm.infoWindow.setContent($('#template').html());
+                            if (photosReceived === photosExpected) {
+                                vm.currentPlace().details.push({
+                                    name: "Flickr",
+                                    value: images
+                                });
+                                vm.infoWindow.setContent($('#template').html());
+                            }
+                        })
+                        .fail(function (jqxhr, textStatus, error) {
+                            var err = textStatus + ", " + error;
+                            console.log("Sizes Request Failed: " + err);
+                            console.log(jqxhr.responseText);
+                        });
+                }
+            })
+            .fail(function (jqxhr, textStatus, error) {
+                var err = textStatus + ", " + error;
+                console.log("Photos Request Failed: " + err);
+                console.log(jqxhr.responseText);
             });
         var request = {
             location: new google.maps.LatLng(vm.currentPlace().lat(), vm.currentPlace().lng()),
@@ -262,7 +229,8 @@ function createMarkerListener(m) {
 //Model: Place
 
 var Place = function (data) {
-    this.id = ko.observable(data.id);
+    this.id = data.id;
+    this.googleplaceid = "";
     this.name = ko.observable(data.name);
     if (data.address) {
         this.address = ko.observable("");
@@ -323,3 +291,16 @@ jQuery(document).ready(function ($) {
         isListVisible = !isListVisible;
     });
 });
+
+$.fn.stars = function () {
+    return $(this).each(function () {
+        // Get the value
+        var val = parseFloat($(this).html());
+        // Make sure that the value is in 0 - 5 range, multiply to get width
+        var size = Math.max(0, (Math.min(5, val))) * 16;
+        // Create stars holder
+        var $span = $('<span />').width(size);
+        // Replace the numerical value with stars
+        $(this).html($span);
+    });
+}
