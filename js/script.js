@@ -118,7 +118,7 @@ function processGoogleImageResults(results, status) {
         for (var i = 0; i < results.length; i++) {
             var place = results[i];
             if (place.name === vm.currentPlace().name()) {
-                vm.currentPlace().googleplaceid = place.place_id;
+                //                vm.currentPlace().googleplaceid = place.place_id;
                 vm.currentPlace().ratings.push({
                     name: "Google Rating",
                     rating: place.rating
@@ -158,12 +158,12 @@ function createMarkerListener(m) {
             var flickrAPI = FLICKR_BASE_URL + "search&jsoncallback=?";
             console.log("getting images from:" + flickrAPI);
             $.getJSON(flickrAPI, {
-                    text: vm.currentPlace().name(),
-                    lat: vm.currentPlace().lat(),
-                    lon: vm.currentPlace().lng(),
-                    format: "json",
-                    api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
-                })
+                text: vm.currentPlace().name(),
+                lat: vm.currentPlace().lat(),
+                lon: vm.currentPlace().lng(),
+                format: "json",
+                api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
+            })
                 .done(function (data) {
                     var images = "";
                     var a = data.photos.photo;
@@ -173,10 +173,10 @@ function createMarkerListener(m) {
                     for (var i in a) {
                         console.log("getting sizes from: " + getSizesURL);
                         $.getJSON(getSizesURL, {
-                                photo_id: a[i].id,
-                                format: "json",
-                                api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
-                            })
+                            photo_id: a[i].id,
+                            format: "json",
+                            api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
+                        })
                             .done(function (data) {
                                 var sizes = data.sizes.size;
                                 var availableSizes = [];
@@ -240,12 +240,17 @@ function createMarkerListener(m) {
 
 var Place = function (data) {
     this.id = data.id;
-    this.googleplaceid = "";
+    //    this.googleplaceid = "";
     this.name = ko.observable(data.name);
     if (data.address) {
         this.address = ko.observable("");
         for (a in data.address) {
-            this.address(this.address() + data.address[a] + "<br/>");
+            if (a < data.address.length - 1) {
+                this.address(this.address() + data.address[a] + "<br/>");
+            } else {
+                this.address(this.address() + data.address[a]);
+            }
+
         }
     }
 
