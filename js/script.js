@@ -17,7 +17,7 @@
 // interesting take on slides; http://jsfiddle.net/jacobdubail/bKaxg/7/
 // image gallery from here http://www.elated.com/articles/elegant-sliding-image-gallery-with-jquery/
 // https://developers.google.com/maps/documentation/javascript/reference#PlaceResult -- get the place id so that  we can get the photos afterwards
-//
+// coverage only works in a server-ed mode
 
 //Globals
 var DEFAULT_LAT = 32.9531079;
@@ -30,16 +30,19 @@ var FLICKR_BASE_URL = "https://api.flickr.com/services/rest/?method=flickr.photo
 
 function createMap() {
     var mapOptions = {
-        center: {
-            lat: DEFAULT_LAT,
-            lng: DEFAULT_LNG
+            center: {
+                lat: DEFAULT_LAT,
+                lng: DEFAULT_LNG
+            },
+            zoom: DEFAULT_ZOOM,
+            zoomControl: false,
+            panControl: false,
+            streetViewControl: false
         },
-        zoom: DEFAULT_ZOOM,
-        zoomControl: false,
-        panControl: false,
-        streetViewControl: false
-    };
-    var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+        map;
+    if (typeof CODE_IS_UNDER_TEST === "undefined") {
+        map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+    }
 
     //    google.maps.event.addListener(map, 'click', function (event) {
     //        var lat = event.latLng.k;
@@ -49,11 +52,15 @@ function createMap() {
 };
 
 function createInfoWindow() {
-    var contentString = '<div></div>';
+    var contentString = '';
     console.log(contentString);
-    return new google.maps.InfoWindow({
-        content: contentString
-    });
+    if (typeof CODE_IS_UNDER_TEST === "undefined") {
+        return new google.maps.InfoWindow({
+            content: contentString
+        });
+    } else {
+        return undefined;
+    }
 };
 
 function getAjaxFromURL(url, callback) {
@@ -69,12 +76,13 @@ function parseFourSquareResults(data) {
         var v = data.response.groups[0].items;
         for (p in v) {
             var venue = v[p].venue;
-            var m = new google.maps.Marker({
-                position: new google.maps.LatLng(venue.location.lat, venue.location.lng),
-                map: vm.map,
-                title: venue.name
-            });
-
+            if (typeof CODE_IS_UNDER_TEST === "undefined") {
+                var m = new google.maps.Marker({
+                    position: new google.maps.LatLng(venue.location.lat, venue.location.lng),
+                    map: vm.map,
+                    title: venue.name
+                });
+            }
             vm.places.push(new Place({
                 id: venue.id,
                 name: venue.name,
@@ -127,103 +135,105 @@ function processGoogleImageResults(results, status) {
 };
 
 function createMarkerListener(m) {
-    google.maps.event.addListener(m, 'click', function () {
-        for (p in vm.places()) {
-            if (m === vm.places()[p].marker) {
-                vm.currentPlace(vm.places()[p]);
-            }
-        }
-
-
-        //        vm.infoWindow.setContent(contentString);
-        getStreetViewContent();
-
-        $(function () {
-            $('span.stars').stars();
-        });
-
-        vm.infoWindow.setContent($('#template').html());
-        vm.infoWindow.open(vm.map, m);
-        //var FLICKR_BASE_URL = "https://api.flickr.com/services/rest/?method=flickr.photos."        
-        //"https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=536b7dd52fb0348e3cb6e94d02f94b95&text=texas+do+brasil&format=json&nojsoncallback=1&api_sig=e6dcd09ce52cb3b022676812edbfcf2d"
-        var flickrAPI = FLICKR_BASE_URL + "search&jsoncallback=?";
-        console.log("getting images from:" + flickrAPI);
-        $.getJSON(flickrAPI, {
-            text: vm.currentPlace().name(),
-            lat: vm.currentPlace().lat(),
-            lon: vm.currentPlace().lng(),
-            format: "json",
-            api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
-        })
-            .done(function (data) {
-                var images = "";
-                var a = data.photos.photo;
-                var getSizesURL = FLICKR_BASE_URL + "getSizes&jsoncallback=?";
-                var photosExpected = a.length;
-                var photosReceived = 0;
-                for (var i in a) {
-                    console.log("getting sizes from: " + getSizesURL);
-                    $.getJSON(getSizesURL, {
-                        photo_id: a[i].id,
-                        format: "json",
-                        api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
-                    })
-                        .done(function (data) {
-                            var sizes = data.sizes.size;
-                            var availableSizes = [];
-                            var sizeIndex = -1;
-                            photosReceived++;
-                            for (var s in sizes) {
-                                availableSizes.push(sizes[s].label);
-                            }
-                            sizeIndex = availableSizes.indexOf("Medium");
-                            if (sizeIndex === -1) {
-                                sizeIndex = availableSizes.indexOf("Medium 640");
-                            }
-                            if (sizeIndex === -1) {
-                                sizeIndex = availableSizes.indexOf("Medium 800");
-                            }
-                            if (sizeIndex !== -1) {
-                                images += "<img src=\"" + sizes[sizeIndex].source + "\" />";
-                            }
-
-                            if (photosReceived === photosExpected) {
-                                vm.currentPlace().details.push({
-                                    name: "Flickr",
-                                    value: images
-                                });
-                                vm.infoWindow.setContent($('#template').html());
-                            }
-                        })
-                        .fail(function (jqxhr, textStatus, error) {
-                            var err = textStatus + ", " + error;
-                            console.log("Sizes Request Failed: " + err);
-                            console.log(jqxhr.responseText);
-                        });
+    if (typeof CODE_IS_UNDER_TEST === "undefined") {
+        google.maps.event.addListener(m, 'click', function () {
+            for (p in vm.places()) {
+                if (m === vm.places()[p].marker) {
+                    vm.currentPlace(vm.places()[p]);
                 }
-            })
-            .fail(function (jqxhr, textStatus, error) {
-                var err = textStatus + ", " + error;
-                console.log("Photos Request Failed: " + err);
-                console.log(jqxhr.responseText);
-            });
-        var request = {
-            location: new google.maps.LatLng(vm.currentPlace().lat(), vm.currentPlace().lng()),
-            radius: '500',
-            name: vm.currentPlace().name()
-        };
+            }
 
-        var service = new google.maps.places.PlacesService(vm.map);
-        service.nearbySearch(request, processGoogleImageResults);
-        //        setTimeout(function () {
-        //
-        //            vm.currentPlace().details.push({
-        //                name: "Another View",
-        //                value: "Some Other Content"
-        //            });
-        //            vm.infoWindow.setContent($('#template').html());
-        //        }, 500);
-    });
+
+            //        vm.infoWindow.setContent(contentString);
+            getStreetViewContent();
+
+            $(function () {
+                $('span.stars').stars();
+            });
+
+            vm.infoWindow.setContent($('#template').html());
+            vm.infoWindow.open(vm.map, m);
+            //var FLICKR_BASE_URL = "https://api.flickr.com/services/rest/?method=flickr.photos."        
+            //"https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=536b7dd52fb0348e3cb6e94d02f94b95&text=texas+do+brasil&format=json&nojsoncallback=1&api_sig=e6dcd09ce52cb3b022676812edbfcf2d"
+            var flickrAPI = FLICKR_BASE_URL + "search&jsoncallback=?";
+            console.log("getting images from:" + flickrAPI);
+            $.getJSON(flickrAPI, {
+                    text: vm.currentPlace().name(),
+                    lat: vm.currentPlace().lat(),
+                    lon: vm.currentPlace().lng(),
+                    format: "json",
+                    api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
+                })
+                .done(function (data) {
+                    var images = "";
+                    var a = data.photos.photo;
+                    var getSizesURL = FLICKR_BASE_URL + "getSizes&jsoncallback=?";
+                    var photosExpected = a.length;
+                    var photosReceived = 0;
+                    for (var i in a) {
+                        console.log("getting sizes from: " + getSizesURL);
+                        $.getJSON(getSizesURL, {
+                                photo_id: a[i].id,
+                                format: "json",
+                                api_key: "536b7dd52fb0348e3cb6e94d02f94b95"
+                            })
+                            .done(function (data) {
+                                var sizes = data.sizes.size;
+                                var availableSizes = [];
+                                var sizeIndex = -1;
+                                photosReceived++;
+                                for (var s in sizes) {
+                                    availableSizes.push(sizes[s].label);
+                                }
+                                sizeIndex = availableSizes.indexOf("Medium");
+                                if (sizeIndex === -1) {
+                                    sizeIndex = availableSizes.indexOf("Medium 640");
+                                }
+                                if (sizeIndex === -1) {
+                                    sizeIndex = availableSizes.indexOf("Medium 800");
+                                }
+                                if (sizeIndex !== -1) {
+                                    images += "<img src=\"" + sizes[sizeIndex].source + "\" />";
+                                }
+
+                                if (photosReceived === photosExpected) {
+                                    vm.currentPlace().details.push({
+                                        name: "Flickr",
+                                        value: images
+                                    });
+                                    vm.infoWindow.setContent($('#template').html());
+                                }
+                            })
+                            .fail(function (jqxhr, textStatus, error) {
+                                var err = textStatus + ", " + error;
+                                console.log("Sizes Request Failed: " + err);
+                                console.log(jqxhr.responseText);
+                            });
+                    }
+                })
+                .fail(function (jqxhr, textStatus, error) {
+                    var err = textStatus + ", " + error;
+                    console.log("Photos Request Failed: " + err);
+                    console.log(jqxhr.responseText);
+                });
+            var request = {
+                location: new google.maps.LatLng(vm.currentPlace().lat(), vm.currentPlace().lng()),
+                radius: '500',
+                name: vm.currentPlace().name()
+            };
+
+            var service = new google.maps.places.PlacesService(vm.map);
+            service.nearbySearch(request, processGoogleImageResults);
+            //        setTimeout(function () {
+            //
+            //            vm.currentPlace().details.push({
+            //                name: "Another View",
+            //                value: "Some Other Content"
+            //            });
+            //            vm.infoWindow.setContent($('#template').html());
+            //        }, 500);
+        });
+    }
 }
 
 //Model: Place
@@ -267,9 +277,10 @@ var ViewModel = function () {
     self.map = createMap();
     self.infoWindow = createInfoWindow();
 
-    var fourSquareURL = FOURSQUARE_BASE_URL + DEFAULT_LAT + "," + DEFAULT_LNG;
-    getAjaxFromURL(fourSquareURL, parseFourSquareResults);
-
+    if (typeof CODE_IS_UNDER_TEST === "undefined") {
+        var fourSquareURL = FOURSQUARE_BASE_URL + DEFAULT_LAT + "," + DEFAULT_LNG;
+        getAjaxFromURL(fourSquareURL, parseFourSquareResults);
+    }
 
 }
 var vm = new ViewModel();

@@ -49,7 +49,7 @@
             </div>
             <div class='tabs' data-bind="foreach: details">
                 <div class='tab'>
-                    <input type='radio' name='PlaceDetails' data-bind="attr: {value: $index, id: 'tab'+$index()}, checked:$parent.selectedTab()" />
+                    <input type='radio' name='PlaceDetails' data-bind="attr: {value: $index, id: 'tab'+$index()}, checked:$parent.selectedTab" />
                     <label data-bind="attr:{for: 'tab'+$index()}, text: name"></label>
                     <div class='tab-content' data-bind="html: value">
                     </div>
