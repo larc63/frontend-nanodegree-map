@@ -3,29 +3,14 @@ QUnit.test("hello test", function (assert) {
 });
 
 //View Model test
-//270var ViewModel = function () {
-//271    var self = this;
-//272    //    self.coder = new google.maps.Geocoder(); .. not needed until the "change neighborhood feature is implemented
-//273    self.dummy = ko.observable("Hello");
-//274    self.places = ko.observableArray([]);
-//275    self.markers = ko.observableArray([]);
-//276    self.currentPlace = ko.observable();
-//277    self.map = createMap();
-//278    self.infoWindow = createInfoWindow();
-//279
-//280    if (typeof CODE_IS_UNDER_TEST === "undefined") {
-//281        var fourSquareURL = FOURSQUARE_BASE_URL + DEFAULT_LAT + "," + DEFAULT_LNG;
-//282        getAjaxFromURL(fourSquareURL, parseFourSquareResults);
-//283    }
-//284
-//285}
 QUnit.module( "ViewModel" );
 QUnit.test("happy path", function (assert) {
-    assert.ok(vm !== undefined, "number of places added is different than expected");
-    assert.ok(vm.places() !== undefined, "number of places added is different than expected");
-    assert.ok(vm.currentPlace() !== undefined, "number of places added is different than expected");
-    assert.ok(vm.map === undefined, "number of places added is different than expected");
-    assert.ok(vm.infoWindow === undefined, "number of places added is different than expected");
+    assert.ok(vm !== undefined, "vm is undefined");
+    assert.ok(vm.places() !== undefined, "places in vm is undefined");
+    assert.ok(vm.currentPlace() === undefined, "currentPlace is defined by default");
+    assert.ok(vm.map === undefined, "map is defined");
+    assert.ok(vm.infoWindow === undefined, "infowindow is defined");
+    //TODO: move code to find current place from marker to a separate function and test it here, checking for currentplace to be some known object
 });
 
 //Model: Place
@@ -57,11 +42,11 @@ QUnit.test("happy path", function (assert) {
 //265    }
 //266    console.log("created place object: " + this.name() + " at " + this.lat() + "," + this.lng());
 //267}
-QUnit.module( "Place" );
-QUnit.test("number of foursquare entries", function (assert) {
-    assert.ok(vm !== undefined, "number of places added is different than expected");
-    assert.strictEqual(vm.places()[0].name(), "Kenny's Wood Fired Grill", "first entry in places is not the expected one");
-});
+//QUnit.module( "Place" );
+//QUnit.test("number of foursquare entries", function (assert) {
+//    assert.ok(vm !== undefined, "number of places added is different than expected");
+//    assert.strictEqual(vm.places()[0].name(), "Kenny's Wood Fired Grill", "first entry in places is not the expected one");
+//});
 
 QUnit.test("number of foursquare entries", function (assert) {
         assert.strictEqual(vm.places().length, 0, "number of places added is different than expected");
