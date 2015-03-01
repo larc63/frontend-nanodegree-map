@@ -283,30 +283,32 @@ var ViewModel = function () {
     self.map = createMap();
     self.infoWindow = createInfoWindow();
 
-    if (typeof CODE_IS_UNDER_TEST === "undefined") {
-        self.getFourSquareInformation();
-    }
+    var isListVisible = false;
+    jQuery(document).ready(function ($) {
+        //open the lateral panel
+        $('.list-btn').on('click', function (event) {
+            event.preventDefault();
+            if (!isListVisible) {
+                $('.list-panel').addClass('is-visible');
+                $('.list-btn').text('[-]');
+            } else {
+                $('.list-panel').removeClass('is-visible');
+                $('.list-btn').text('[+]');
+            }
+            isListVisible = !isListVisible;
+        });
+
+        if (typeof CODE_IS_UNDER_TEST === "undefined") {
+            self.getFourSquareInformation();
+        }
+    });
 
 }
 var vm = new ViewModel();
 ko.applyBindings(vm);
 
 
-var isListVisible = false;
-jQuery(document).ready(function ($) {
-    //open the lateral panel
-    $('.list-btn').on('click', function (event) {
-        event.preventDefault();
-        if (!isListVisible) {
-            $('.list-panel').addClass('is-visible');
-            $('.list-btn').text('[-]');
-        } else {
-            $('.list-panel').removeClass('is-visible');
-            $('.list-btn').text('[+]');
-        }
-        isListVisible = !isListVisible;
-    });
-});
+
 
 $.fn.stars = function () {
     return $(this).each(function () {
