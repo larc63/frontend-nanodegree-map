@@ -83,19 +83,6 @@ function getAjaxFromURL(url, extraparams, callback) {
         });
 };
 
-function getStreetViewContent() {
-    var a = vm.currentPlace().details();
-    for (d in a) {
-        if (a[d].name === "Street View") {
-            return;
-        }
-    }
-    vm.currentPlace().details.push({
-        name: "Street View",
-        value: "<img src=\"" + GOOGLE_SV_BASE_URL + vm.currentPlace().lat() + "," + vm.currentPlace().lng() + "\" alt=\"Streetview image\" />"
-    });
-};
-
 function processGoogleImageResults(results, status) {
     if (status == google.maps.places.PlacesServiceStatus.OK) {
         for (var i = 0; i < results.length; i++) {
@@ -182,26 +169,6 @@ function getGooglePlacesInfo() {
     service.nearbySearch(request, processGoogleImageResults);
 };
 
-function createMarkerListener(m) {
-    if (typeof CODE_IS_UNDER_TEST === "undefined") {
-        google.maps.event.addListener(m, 'click', function () {
-            for (p in vm.places()) {
-                if (m === vm.places()[p].marker) {
-                    vm.currentPlace(vm.places()[p]);
-                }
-            }
-            //        vm.infoWindow.setContent(contentString);
-            getStreetViewContent();
-
-            updateMarkerInformation();
-            vm.infoWindow.open(vm.map, m);
-            getFlickrImages();
-
-            getGooglePlacesInfo();
-        });
-    }
-}
-
 //Model: Place
 
 var Place = function (data) {
@@ -234,6 +201,11 @@ var Place = function (data) {
             rating: data.rating / 2.0
         });
     }
+    
+    this.details.push({
+        name: "Street View",
+        value: "<img src=\"" + GOOGLE_SV_BASE_URL + this.lat() + "," + this.lng() + "\" alt=\"Streetview image\" />"
+    });
     console.log("created place object: " + this.name() + " at " + this.lat() + "," + this.lng());
 }
 
@@ -241,9 +213,24 @@ var Place = function (data) {
 var ViewModel = function () {
     var self = this;
     //helper functions
-    //    self.createMarkerListener = function(marker){
-    //        
-    //    }
+    self.markerClickListener = function () {
+        for (p in vm.places()) {
+            if (m === vm.places()[p].marker) {
+                vm.currentPlace(vm.places()[p]);
+            }
+        }
+        updateMarkerInformation();
+        self.infoWindow.open(self.map, m);
+        getFlickrImages();
+
+        getGooglePlacesInfo();
+    };
+
+    self.createMarkerListener = function (m) {
+        if (typeof CODE_IS_UNDER_TEST === "undefined") {
+            google.maps.event.addListener(m, 'click', self.markerClickListener);
+        }
+    }
     self.parseFourSquareResults = function (data) {
         if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
             var v = data.response.groups[0].items;
@@ -268,7 +255,7 @@ var ViewModel = function () {
                     marker: m
                 }));
 
-                createMarkerListener(m);
+                self.createMarkerListener(m);
             }
         }
     };
@@ -306,9 +293,6 @@ var ViewModel = function () {
 }
 var vm = new ViewModel();
 ko.applyBindings(vm);
-
-
-
 
 $.fn.stars = function () {
     return $(this).each(function () {

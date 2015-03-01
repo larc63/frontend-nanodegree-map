@@ -22,16 +22,6 @@ QUnit.test("number of foursquare entries", function (assert) {
     assert.strictEqual(vm.places()[0].name(), "Kenny's Wood Fired Grill", "first entry in places is not the expected one");
 });
 
-QUnit.test("GetStreetViewConent", function (assert) {
-    assert.strictEqual(vm.places().length, 0, "number of places added is different than expected");
-    this.viewmodel.parseFourSquareResults(fourSquareTestData);
-    vm.currentPlace(vm.places()[0]);
-    assert.strictEqual(vm.currentPlace().details().length, 0, "current place details length is not the expected one");
-    getStreetViewContent();
-    assert.strictEqual(vm.currentPlace().details().length, 1, "current place details length is not the expected one");
-    assert.strictEqual(vm.currentPlace().details()[0].name, "Street View", "current place detail name is not the expected one");
-});
-
 //Model: Place
 QUnit.module("Place", {
     beforeEach: function () {
@@ -62,7 +52,7 @@ QUnit.test("Place happy path", function (assert) {
     assert.strictEqual(this.p.lng(), 33.0001, "place lng is not the expected one");
     assert.strictEqual(this.p.marker, "someObject", "place id is not the expected one");
     assert.strictEqual(this.p.selectedTab(), undefined, "place selectedTab is not the expected one");
-    assert.strictEqual(this.p.details().length, 0, "place details length is not the expected one");
+    assert.strictEqual(this.p.details().length, 1, "place details length is not the expected one");
     assert.strictEqual(this.p.ratings().length, 0, "place ratings length is not the expected one");
 });
 QUnit.test("Add A Rating", function (assert) {
@@ -79,7 +69,7 @@ QUnit.test("Add A Rating", function (assert) {
     assert.strictEqual(this.p.lng(), 33.0001, "place lng is not the expected one");
     assert.strictEqual(this.p.marker, "someObject", "place id is not the expected one");
     assert.strictEqual(this.p.selectedTab(), undefined, "place selectedTab is not the expected one");
-    assert.strictEqual(this.p.details().length, 0, "place details length is not the expected one");
+    assert.strictEqual(this.p.details().length, 1, "place details length is not the expected one");
     assert.strictEqual(this.p.ratings().length, 1, "place ratings length is not the expected one");
     assert.strictEqual(this.p.ratings()[0].name, "myrating", "place ratings first rating is not the expected one");
     assert.strictEqual(this.p.ratings()[0].rating, 5, "place ratings first rating is not the expected one");
@@ -98,8 +88,8 @@ QUnit.test("Add Detail", function (assert) {
     assert.strictEqual(this.p.lng(), 33.0001, "place lng is not the expected one");
     assert.strictEqual(this.p.marker, "someObject", "place id is not the expected one");
     assert.strictEqual(this.p.selectedTab(), undefined, "place selectedTab is not the expected one");
-    assert.strictEqual(this.p.details().length, 1, "place details length is not the expected one");
+    assert.strictEqual(this.p.details().length, 2, "place details length is not the expected one");
     assert.strictEqual(this.p.ratings().length, 0, "place ratings length is not the expected one");
-    assert.strictEqual(this.p.details()[0].name, "mydetail", "place ratings first rating is not the expected one");
-    assert.strictEqual(this.p.details()[0].value, 5, "place ratings first rating is not the expected one");
+    assert.strictEqual(this.p.details()[1].name, "mydetail", "place ratings first rating is not the expected one");
+    assert.strictEqual(this.p.details()[1].value, 5, "place ratings first rating is not the expected one");
 });
