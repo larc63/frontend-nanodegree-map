@@ -71,35 +71,6 @@ function getAjaxFromURL(url, callback) {
     });
 };
 
-function parseFourSquareResults(data) {
-    if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
-        var v = data.response.groups[0].items;
-        for (p in v) {
-            var venue = v[p].venue;
-            if (typeof CODE_IS_UNDER_TEST === "undefined") {
-                var m = new google.maps.Marker({
-                    position: new google.maps.LatLng(venue.location.lat, venue.location.lng),
-                    map: vm.map,
-                    title: venue.name
-                });
-            }
-            vm.places.push(new Place({
-                id: venue.id,
-                name: venue.name,
-                phone: venue.contact.formattedPhone,
-                address: venue.location.formattedAddress,
-                lat: venue.location.lat,
-                lng: venue.location.lng,
-                url: venue.url,
-                rating: venue.rating,
-                marker: m
-            }));
-
-            createMarkerListener(m);
-        }
-    }
-};
-
 function getStreetViewContent() {
     var a = vm.currentPlace().details();
     for (d in a) {
@@ -274,6 +245,39 @@ var Place = function (data) {
 //View Model
 var ViewModel = function () {
     var self = this;
+    //helper functions
+//    self.createMarkerListener = function(marker){
+//        
+//    }
+    self.parseFourSquareResults = function (data) {
+        if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
+            var v = data.response.groups[0].items;
+            for (p in v) {
+                var venue = v[p].venue;
+                if (typeof CODE_IS_UNDER_TEST === "undefined") {
+                    var m = new google.maps.Marker({
+                        position: new google.maps.LatLng(venue.location.lat, venue.location.lng),
+                        map: self.map,
+                        title: venue.name
+                    });
+                }
+                self.places.push(new Place({
+                    id: venue.id,
+                    name: venue.name,
+                    phone: venue.contact.formattedPhone,
+                    address: venue.location.formattedAddress,
+                    lat: venue.location.lat,
+                    lng: venue.location.lng,
+                    url: venue.url,
+                    rating: venue.rating,
+                    marker: m
+                }));
+
+                createMarkerListener(m);
+            }
+        }
+    };
+
     //    self.coder = new google.maps.Geocoder(); .. not needed until the "change neighborhood feature is implemented
     self.places = ko.observableArray([]);
     self.currentPlace = ko.observable();
@@ -282,7 +286,7 @@ var ViewModel = function () {
 
     if (typeof CODE_IS_UNDER_TEST === "undefined") {
         var fourSquareURL = FOURSQUARE_BASE_URL + DEFAULT_LAT + "," + DEFAULT_LNG;
-        getAjaxFromURL(fourSquareURL, parseFourSquareResults);
+        getAjaxFromURL(fourSquareURL, self.parseFourSquareResults);
     }
 
 }
