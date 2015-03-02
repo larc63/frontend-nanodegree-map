@@ -70,10 +70,7 @@ var Place = function (data) {
     if (data.rating) {
         this.ratings.push(data.rating);
     }
-    this.details.push({
-        name: "Street View",
-        value: "<img src=\"" + GOOGLE_SV_BASE_URL + this.lat() + "," + this.lng() + "\" alt=\"Streetview image\" />"
-    });
+
     console.log("created place object: " + this.name() + " at " + this.lat() + "," + this.lng());
 }
 
@@ -210,6 +207,8 @@ var ViewModel = function () {
                 self.currentPlace(self.places()[p]);
             }
         }
+        $("tab input").prop("checked", true).change();
+//        self.currentPlace().selectedTab("tab0");
         self.updateMarkerInformation();
         self.infoWindow.open(self.map, m);
         self.getFlickrImages();
@@ -236,7 +235,7 @@ var ViewModel = function () {
                         title: venue.name
                     });
                 }
-                self.places.push(new Place({
+                var p = new Place({
                     id: venue.id,
                     name: venue.name,
                     phone: venue.contact.formattedPhone,
@@ -249,7 +248,12 @@ var ViewModel = function () {
                         rating: (venue.rating / 2.0)
                     },
                     marker: m
-                }));
+                });
+                self.places.push(p);
+                p.details.push({
+                    name: "Street View",
+                    value: "<img src=\"" + GOOGLE_SV_BASE_URL + p.lat() + "," + p.lng() + "\" alt=\"Streetview image\" />"
+                });
 
                 self.createMarkerListener(m);
             }
