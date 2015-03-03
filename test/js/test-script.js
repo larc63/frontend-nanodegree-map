@@ -8,7 +8,7 @@ QUnit.module("ViewModel", {
 });
 QUnit.test("happy path", function (assert) {
     assert.ok(vm !== undefined, "vm is undefined");
-    assert.ok(vm.places() !== undefined, "places in vm is undefined");
+    assert.ok(this.viewmodel.places !== undefined, "places in vm is undefined");
     assert.ok(vm.currentPlace() === undefined, "currentPlace is defined by default");
     assert.ok(vm.map === undefined, "map is defined");
     assert.ok(vm.infoWindow === undefined, "infowindow is defined");
@@ -16,10 +16,10 @@ QUnit.test("happy path", function (assert) {
 });
 
 QUnit.test("number of foursquare entries", function (assert) {
-    assert.strictEqual(vm.places().length, 0, "number of places added is different than expected");
+    assert.strictEqual(this.viewmodel.places.length, 0, "number of places added is different than expected");
     this.viewmodel.parseFourSquareResults(fourSquareTestData);
-    assert.strictEqual(vm.places().length, 30, "number of places added is different than expected");
-    assert.strictEqual(vm.places()[0].name(), "Kenny's Wood Fired Grill", "first entry in places is not the expected one");
+    assert.strictEqual(this.viewmodel.places.length, 30, "number of places added is different than expected");
+    assert.strictEqual(this.viewmodel.places[0].name(), "Kenny's Wood Fired Grill", "first entry in places is not the expected one");
 });
 
 //Model: Place
