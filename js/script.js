@@ -1,24 +1,3 @@
-//http://www.uiparade.com/portfolio/natural-search-bar/
-//http://www.w3schools.com/googleapi/tryit.asp?filename=tryhtml_map_marker_infowindow
-//http://www.w3schools.com/googleapi/tryit.asp?filename=tryhtml_map_marker_infowindow2
-//http://stackoverflow.com/questions/9309251/google-maps-javascript-api-get-gps-coordinates-from-address
-//https://github.com/danceoval/neighborhood/blob/master/index.html
-//https://github.com/DawoonC/dw-neighborhood/blob/master/templates/js/app.js
-// stars from http://stackoverflow.com/questions/1987524/turn-a-number-into-star-rating-display-using-jquery-and-css
-// 4 square from https://developer.foursquare.com/docs/venues/search
-// to convert to data uri http://websemantics.co.uk/online_tools/image_to_data_uri_convertor/
-// fiddle for the modal http://jsfiddle.net/y5g8zg1b/24/
-// slide in panel from http://codyhouse.co/gem/css-slide-in-panel/
-// fiddle for the slide in panel http://jsfiddle.net/8fzz7ud1/
-//  -- >>>  fiddle for a simplified slide in panel http://jsfiddle.net/7L8hgp8v/17/   <<<< ---- 
-// tab view http://codyhouse.co/gem/responsive-tabbed-navigation/
-// http://stackoverflow.com/questions/6794405/trigger-google-maps-marker-click
-// better, lighter tabs: http://css-tricks.com/functional-css-tabs-revisited/
-// interesting take on slides; http://jsfiddle.net/jacobdubail/bKaxg/7/
-// image gallery from here http://www.elated.com/articles/elegant-sliding-image-gallery-with-jquery/
-// https://developers.google.com/maps/documentation/javascript/reference#PlaceResult -- get the place id so that  we can get the photos afterwards
-// http://stackoverflow.com/questions/1789945/how-can-i-check-if-one-string-contains-another-substring
-
 //Globals
 var DEFAULT_LAT = 32.9531079;
 var DEFAULT_LNG = -96.8229146;
@@ -289,7 +268,7 @@ var ViewModel = function () {
                     self.createMarkerListener(m);
                 }
             }
-        }else{
+        } else {
             alert("Could not load default places");
         }
     };
@@ -326,7 +305,7 @@ var ViewModel = function () {
     });
 
     self.clickOnMarker = function (place) {
-        new google.maps.event.trigger( place.marker, 'click' );
+        new google.maps.event.trigger(place.marker, 'click');
     };
 
     var isListVisible = false;
@@ -347,21 +326,20 @@ var ViewModel = function () {
         if (typeof CODE_IS_UNDER_TEST === "undefined") {
             self.getFourSquareInformation();
         }
+        $.fn.stars = function () {
+            return $(this).each(function () {
+                // Get the value
+                var val = parseFloat($(this).html());
+                // Make sure that the value is in 0 - 5 range, multiply to get width
+                var size = Math.max(0, (Math.min(5, val))) * 16;
+                // Create stars holder
+                var $span = $('<span />').width(size);
+                // Replace the numerical value with stars
+                $(this).html($span);
+            });
+        }
     });
 
 }
 var vm = new ViewModel();
 ko.applyBindings(vm);
-
-$.fn.stars = function () {
-    return $(this).each(function () {
-        // Get the value
-        var val = parseFloat($(this).html());
-        // Make sure that the value is in 0 - 5 range, multiply to get width
-        var size = Math.max(0, (Math.min(5, val))) * 16;
-        // Create stars holder
-        var $span = $('<span />').width(size);
-        // Replace the numerical value with stars
-        $(this).html($span);
-    });
-}
