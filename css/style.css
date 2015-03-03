@@ -32,7 +32,7 @@ input, button {
 }
 input {
     border: 1px solid #BABABA;
-    width: 222px;
+    width: 300px;
     height: 38px;
     box-shadow: inset -2px 1px 1px #D5D5D5, 1px 1px #EDEDED;
     border-top-left-radius: 5px;
