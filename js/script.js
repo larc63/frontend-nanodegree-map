@@ -289,6 +289,8 @@ var ViewModel = function () {
                     self.createMarkerListener(m);
                 }
             }
+        }else{
+            alert("Could not load default places");
         }
     };
     self.getFourSquareInformation = function () {
