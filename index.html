@@ -11,21 +11,23 @@
     <div id="map-canvas">
     </div>
     <div class="formdiv">
-        <input type="text" placeholder="search within neighborhood" />
+        <input type="text" placeholder="search within suggested markers" data-bind="value: searchValue, valueUpdate: 'keyup'"/>
         <button type="submit">Find</button>
     </div>
     <div class="list-panel">
         <div class="list-btn">[+]</div>
         <div class="list-panel-container">
-            <div class="list-panel-content" data-bind="foreach: places">
+            <div class="list-panel-content" data-bind="foreach: filteredPlaces">
                 <div class="places-list-item-container">
                     <div class="places-list-item-title">
                         <div class="places-list-item-name" data-bind="text: name"></div>
+<!--
                         <div class="places-list-item-remove"><a href="#">[X]</a>
 
                         </div>
+-->
                     </div>
-                    <div class="places-list-item-adress" data-bind="text: address"></div>
+                    <div class="places-list-item-adress" data-bind="html: address"></div>
                 </div>
             </div>
         </div>

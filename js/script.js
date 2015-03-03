@@ -17,12 +17,12 @@
 // interesting take on slides; http://jsfiddle.net/jacobdubail/bKaxg/7/
 // image gallery from here http://www.elated.com/articles/elegant-sliding-image-gallery-with-jquery/
 // https://developers.google.com/maps/documentation/javascript/reference#PlaceResult -- get the place id so that  we can get the photos afterwards
-// coverage only works in a server-ed mode
+// http://stackoverflow.com/questions/1789945/how-can-i-check-if-one-string-contains-another-substring
 
 //Globals
 var DEFAULT_LAT = 32.9531079;
 var DEFAULT_LNG = -96.8229146;
-var DEFAULT_ZOOM = 17;
+var DEFAULT_ZOOM = 15;
 var FOURSQUARE_BASE_URL = "https://api.foursquare.com/v2/venues/explore?oauth_token=C5YVRDGQGZLXH2SVONVBTXHZRYDBDDO4B5JLHQYEENJSFWS4&v=20150223&ll="; //
 var GOOGLE_SV_BASE_URL = 'http://maps.googleapis.com/maps/api/streetview?size=640x400&location=';
 var FLICKR_BASE_URL = "https://api.flickr.com/services/rest/?method=flickr.photos."
@@ -125,8 +125,8 @@ var ViewModel = function () {
         if (status == google.maps.places.PlacesServiceStatus.OK) {
             for (var i = 0; i < results.length; i++) {
                 var place = results[i];
-                if (place.name === vm.currentPlace().name()) {
-                    //                vm.currentPlace().googleplaceid = place.place_id;
+                if (place.name === self.currentPlace().name()) {
+                    //                self.currentPlace().googleplaceid = place.place_id;
                     self.currentPlace().ratings.push({
                         name: "Google Rating",
                         rating: place.rating
@@ -226,14 +226,19 @@ var ViewModel = function () {
     };
 
     self.markerClickListener = function (m) {
-        for (p in self.places()) {
-            if (m === self.places()[p].marker) {
-                self.currentPlace(self.places()[p]);
+        for (p in self.places) {
+            if (m === self.places[p].marker) {
+                self.currentPlace(self.places[p]);
             }
         }
         $("tab input").prop("checked", true).change();
         //        self.currentPlace().selectedTab("tab0");
         self.updateMarkerInformation();
+        if (isListVisible) {
+            $('.list-panel').removeClass('is-visible');
+            $('.list-btn').text('[+]');
+            isListVisible = false;
+        }
         self.infoWindow.open(self.map, m);
 
         self.getFlickrImages();
@@ -275,6 +280,7 @@ var ViewModel = function () {
                         marker: m
                     });
                     self.places.push(p);
+                    self.filteredPlaces.push(p);
                     p.details.push({
                         name: "Street View",
                         value: "<img src=\"" + GOOGLE_SV_BASE_URL + p.lat() + "," + p.lng() + "\" alt=\"Streetview image\" />"
@@ -291,10 +297,31 @@ var ViewModel = function () {
     }
 
     //    self.coder = new google.maps.Geocoder(); .. not needed until the "change neighborhood feature is implemented
-    self.places = ko.observableArray([]);
+    self.places = [];
+    self.filteredPlaces = ko.observableArray([]);
     self.currentPlace = ko.observable();
     self.createMap();
     self.infoWindow = self.createInfoWindow();
+
+
+    self.searchValue = ko.observable();
+    self.searchValue.subscribe(function () {
+        self.filteredPlaces.removeAll();
+        if (self.searchValue !== '') {
+            for (p in self.places) {
+                var name = self.places[p].name().toLowerCase();
+                //check if the search term is contained within the place's name
+                if (name.indexOf(self.searchValue().toLowerCase()) > -1) {
+                    self.places[p].marker.setMap(self.map);
+                    self.filteredPlaces.push(self.places[p]);
+                } else { //if not, remove the marker
+                    self.places[p].marker.setMap(undefined);
+                }
+            }
+        } else {
+            self.filteredPlaces(self.places.slice(0));
+        }
+    });
 
     var isListVisible = false;
     jQuery(document).ready(function ($) {
