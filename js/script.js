@@ -113,6 +113,12 @@ var ViewModel = function () {
         $('span.stars').stars();
         //update/copy the template into the marker's infowindow
         self.infoWindow.setContent($('#template').html());
+        // knockoutjs was giving some grief, but forcing it through jquery seems to work
+        setTimeout(function () {
+            if (self.currentPlace().selectedTab() === undefined) {
+                $("#tab0").prop("checked", true);
+            }
+        }, 0);
     }
 
     self.processGoogleImageResults = function (results, status) {
@@ -126,8 +132,7 @@ var ViewModel = function () {
                         rating: place.rating
                     });
 
-                    $('span.stars').stars();
-                    self.infoWindow.setContent($('#template').html());
+                    self.updateMarkerInformation();
                     break;
                 }
             }
@@ -182,7 +187,7 @@ var ViewModel = function () {
                             name: "Flickr",
                             value: images
                         });
-                        self.infoWindow.setContent($('#template').html());
+                        self.updateMarkerInformation();
                     }
                 });
             }
@@ -208,7 +213,7 @@ var ViewModel = function () {
             }
         }
         $("tab input").prop("checked", true).change();
-//        self.currentPlace().selectedTab("tab0");
+        //        self.currentPlace().selectedTab("tab0");
         self.updateMarkerInformation();
         self.infoWindow.open(self.map, m);
         self.getFlickrImages();
