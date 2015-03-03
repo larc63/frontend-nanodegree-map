@@ -249,37 +249,39 @@ var ViewModel = function () {
     }
     self.parseFourSquareResults = function (data) {
         if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
-            var v = data.response.groups[0].items;
-            for (p in v) {
-                var venue = v[p].venue;
-                if (typeof CODE_IS_UNDER_TEST === "undefined") {
-                    var m = new google.maps.Marker({
-                        position: new google.maps.LatLng(venue.location.lat, venue.location.lng),
-                        map: self.map,
-                        title: venue.name
+            for (g in data.response.groups) {
+                var v = data.response.groups[g].items;
+                for (p in v) {
+                    var venue = v[p].venue;
+                    if (typeof CODE_IS_UNDER_TEST === "undefined") {
+                        var m = new google.maps.Marker({
+                            position: new google.maps.LatLng(venue.location.lat, venue.location.lng),
+                            map: self.map,
+                            title: venue.name
+                        });
+                    }
+                    var p = new Place({
+                        id: venue.id,
+                        name: venue.name,
+                        phone: venue.contact.formattedPhone,
+                        address: venue.location.formattedAddress,
+                        lat: venue.location.lat,
+                        lng: venue.location.lng,
+                        url: venue.url,
+                        rating: {
+                            name: "Foursquare Rating",
+                            rating: (venue.rating / 2.0)
+                        },
+                        marker: m
                     });
-                }
-                var p = new Place({
-                    id: venue.id,
-                    name: venue.name,
-                    phone: venue.contact.formattedPhone,
-                    address: venue.location.formattedAddress,
-                    lat: venue.location.lat,
-                    lng: venue.location.lng,
-                    url: venue.url,
-                    rating: {
-                        name: "Foursquare Rating",
-                        rating: (venue.rating / 2.0)
-                    },
-                    marker: m
-                });
-                self.places.push(p);
-                p.details.push({
-                    name: "Street View",
-                    value: "<img src=\"" + GOOGLE_SV_BASE_URL + p.lat() + "," + p.lng() + "\" alt=\"Streetview image\" />"
-                });
+                    self.places.push(p);
+                    p.details.push({
+                        name: "Street View",
+                        value: "<img src=\"" + GOOGLE_SV_BASE_URL + p.lat() + "," + p.lng() + "\" alt=\"Streetview image\" />"
+                    });
 
-                self.createMarkerListener(m);
+                    self.createMarkerListener(m);
+                }
             }
         }
     };
