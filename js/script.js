@@ -140,14 +140,23 @@ var ViewModel = function () {
     };
 
     self.getGooglePlacesInfo = function () {
-        var request = {
-            location: new google.maps.LatLng(self.currentPlace().lat(), self.currentPlace().lng()),
-            radius: '500',
-            name: self.currentPlace().name()
-        };
+        var hasGooglePlacesInfo = false;
+        for (p in self.currentPlace().ratings()) {
+            if (self.currentPlace().ratings()[p].name === "Google Rating") {
+                hasGooglePlacesInfo = true;
+                break;
+            }
+        }
+        if (!hasGooglePlacesInfo) {
+            var request = {
+                location: new google.maps.LatLng(self.currentPlace().lat(), self.currentPlace().lng()),
+                radius: '500',
+                name: self.currentPlace().name()
+            };
 
-        var service = new google.maps.places.PlacesService(self.map);
-        service.nearbySearch(request, self.processGoogleImageResults);
+            var service = new google.maps.places.PlacesService(self.map);
+            service.nearbySearch(request, self.processGoogleImageResults);
+        }
     };
 
     self.parseFlickrImages = function (data) {
@@ -183,6 +192,7 @@ var ViewModel = function () {
                     }
 
                     if (photosReceived === photosExpected) {
+
                         self.currentPlace().details.push({
                             name: "Flickr",
                             value: images
@@ -195,15 +205,24 @@ var ViewModel = function () {
     };
 
     self.getFlickrImages = function () {
-        var flickrAPI = FLICKR_BASE_URL + "search&jsoncallback=?";
-        //    console.log("getting images from:" + flickrAPI);
-        getAjaxFromURL(flickrAPI, {
-            text: self.currentPlace().name(),
-            lat: self.currentPlace().lat(),
-            lon: self.currentPlace().lng(),
-            format: "json",
-            api_key: FLICKR_API_KEY
-        }, self.parseFlickrImages);
+        var hasFlickr = false;
+        for (p in self.currentPlace().details()) {
+            if (self.currentPlace().details()[p].name === "Flickr") {
+                hasFlickr = true;
+                break;
+            }
+        }
+        if (!hasFlickr) {
+            var flickrAPI = FLICKR_BASE_URL + "search&jsoncallback=?";
+            //    console.log("getting images from:" + flickrAPI);
+            getAjaxFromURL(flickrAPI, {
+                text: self.currentPlace().name(),
+                lat: self.currentPlace().lat(),
+                lon: self.currentPlace().lng(),
+                format: "json",
+                api_key: FLICKR_API_KEY
+            }, self.parseFlickrImages);
+        }
     };
 
     self.markerClickListener = function (m) {
@@ -216,8 +235,8 @@ var ViewModel = function () {
         //        self.currentPlace().selectedTab("tab0");
         self.updateMarkerInformation();
         self.infoWindow.open(self.map, m);
-        self.getFlickrImages();
 
+        self.getFlickrImages();
         self.getGooglePlacesInfo();
     };
 
