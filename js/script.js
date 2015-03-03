@@ -323,6 +323,10 @@ var ViewModel = function () {
         }
     });
 
+    self.clickOnMarker = function (place) {
+        new google.maps.event.trigger( place.marker, 'click' );
+    };
+
     var isListVisible = false;
     jQuery(document).ready(function ($) {
         //open the lateral panel

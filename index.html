@@ -17,14 +17,9 @@
         <div class="list-btn">[+]</div>
         <div class="list-panel-container">
             <div class="list-panel-content" data-bind="foreach: filteredPlaces">
-                <div class="places-list-item-container">
+                <div class="places-list-item-container" data-bind="click: $parent.clickOnMarker">
                     <div class="places-list-item-title">
                         <div class="places-list-item-name" data-bind="text: name"></div>
-<!--
-                        <div class="places-list-item-remove"><a href="#">[X]</a>
-
-                        </div>
--->
                     </div>
                     <div class="places-list-item-adress" data-bind="html: address"></div>
                 </div>
