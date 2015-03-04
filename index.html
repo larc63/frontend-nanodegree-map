@@ -12,7 +12,7 @@
         <input type="text" placeholder="search within suggested markers" data-bind="value: searchValue, valueUpdate: 'keyup'"/>
     </div>
     <div class="list-panel">
-        <div class="list-btn">[+]</div>
+        <div class="list-btn" data-bind="click: clickOnListButton">[+]</div>
         <div class="list-panel-container">
             <div class="list-panel-content" data-bind="foreach: filteredPlaces">
                 <div class="places-list-item-container" data-bind="click: $parent.clickOnMarker">

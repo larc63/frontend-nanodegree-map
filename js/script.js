@@ -212,13 +212,13 @@ var ViewModel = function () {
     self.isListVisible = ko.observable(false);
     self.isListVisible.subscribe(function () {
         if (self.isListVisible()) {
-//            $('.list-panel').addClass('is-visible');
+            $('.list-panel').addClass('is-visible');
             $('.list-btn').text('[-]');
         } else {
-//            $('.list-panel').removeClass('is-visible');
+            $('.list-panel').removeClass('is-visible');
             $('.list-btn').text('[+]');
         }
-//        self.isListVisible(!self.isListVisible());
+        //        self.isListVisible(!self.isListVisible());
     });
     /** 
      * updateMarkerInformation Helper function to update the infoWindow content, stars and selected tab (workaround) included
@@ -506,18 +506,14 @@ var ViewModel = function () {
         new google.maps.event.trigger(place.marker, 'click');
     };
 
-    //TODO: check if there can be a binding (add style) through knockout for this
-    jQuery(document).ready(function ($) {
-        //open the lateral panel
-        $('.list-btn').on('click', function (event) {
-            event.preventDefault();
-            self.isListVisible(!self.isListVisible());
-        });
+    self.clickOnListButton = function () {
+        self.isListVisible(!self.isListVisible());
+    };
 
+    jQuery(document).ready(function ($) {
         if (typeof CODE_IS_UNDER_TEST === "undefined") {
             self.getFourSquareInformation();
         }
-        //TODO: see if this can be knockoutedized
         $.fn.stars = function () {
             return $(this).each(function () {
                 // Get the value
