@@ -202,13 +202,24 @@ var ViewModel = function () {
         console.log('');
         if (typeof CODE_IS_UNDER_TEST === "undefined") {
             return new google.maps.InfoWindow({
-                content: contentString
+                content: ''
             });
         } else {
             return undefined;
         }
     };
 
+    self.isListVisible = ko.observable(false);
+    self.isListVisible.subscribe(function () {
+        if (self.isListVisible()) {
+//            $('.list-panel').addClass('is-visible');
+            $('.list-btn').text('[-]');
+        } else {
+//            $('.list-panel').removeClass('is-visible');
+            $('.list-btn').text('[+]');
+        }
+//        self.isListVisible(!self.isListVisible());
+    });
     /** 
      * updateMarkerInformation Helper function to update the infoWindow content, stars and selected tab (workaround) included
      **/
@@ -361,11 +372,7 @@ var ViewModel = function () {
         $("tab input").prop("checked", true).change();
         //        self.currentPlace().selectedTab("tab0");
         self.updateMarkerInformation();
-        if (isListVisible) {
-            $('.list-panel').removeClass('is-visible');
-            $('.list-btn').text('[+]');
-            isListVisible = false;
-        }
+        self.isListVisible(false);
         self.infoWindow.open(self.map, m);
 
         self.getFlickrImages();
@@ -490,8 +497,8 @@ var ViewModel = function () {
     });
 
     /**
-     * clickOnMarker callback for when a place is clicked on in the list, triggers 
-     * the click event for the marker, opening the infoWindo on it's location and 
+     * clickOnMarker callback for when a place is clicked on in the list, triggers
+     * the click event for the marker, opening the infoWindo on it's location and
      * with it's information
      * @params place the place object that's been clicked on
      */
@@ -499,24 +506,18 @@ var ViewModel = function () {
         new google.maps.event.trigger(place.marker, 'click');
     };
 
-    var isListVisible = false;
+    //TODO: check if there can be a binding (add style) through knockout for this
     jQuery(document).ready(function ($) {
         //open the lateral panel
         $('.list-btn').on('click', function (event) {
             event.preventDefault();
-            if (!isListVisible) {
-                $('.list-panel').addClass('is-visible');
-                $('.list-btn').text('[-]');
-            } else {
-                $('.list-panel').removeClass('is-visible');
-                $('.list-btn').text('[+]');
-            }
-            isListVisible = !isListVisible;
+            self.isListVisible(!self.isListVisible());
         });
 
         if (typeof CODE_IS_UNDER_TEST === "undefined") {
             self.getFourSquareInformation();
         }
+        //TODO: see if this can be knockoutedized
         $.fn.stars = function () {
             return $(this).each(function () {
                 // Get the value
