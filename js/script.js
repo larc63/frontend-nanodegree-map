@@ -1,4 +1,10 @@
 //Globals
+/*global $ */
+/*global ko */
+/*global alert */
+/*global google */
+/*global console */
+/*global CODE_IS_UNDER_TEST */
 
 /**
  * Default latitude for the map
@@ -57,6 +63,7 @@ var FLICKR_API_KEY = "28388cd732250dfd1cfbd8168b077536";
  * @param callback the function that will be called upon a successfull completion
  **/
 function getAjaxFromURL(url, extraparams, callback) {
+    "use strict";
     $.getJSON(url, extraparams)
         .done(function (data) {
             callback(data);
@@ -66,7 +73,7 @@ function getAjaxFromURL(url, extraparams, callback) {
             console.log("Ajax Request Failed: " + err);
             console.log(jqxhr.responseText);
         });
-};
+}
 
 /** 
  * Place
@@ -75,6 +82,8 @@ function getAjaxFromURL(url, extraparams, callback) {
  * @constructor
  **/
 var Place = function (data) {
+    "use strict";
+    var a;
     /**
      * Place id, taken from the foursquare information
      * @property id
@@ -94,7 +103,7 @@ var Place = function (data) {
      */
     this.address = ko.observable("");
     if (data.address) {
-        for (a in data.address) {
+        for (a = 0; a < data.address.length; a += 1) {
             if (a < data.address.length - 1) {
                 this.address(this.address() + data.address[a] + "<br/>");
             } else {
@@ -157,7 +166,7 @@ var Place = function (data) {
     }
 
     //    console.log("created place object: " + this.name() + " at " + this.lat() + "," + this.lng());
-}
+};
 
 /** 
  * View Model
@@ -166,6 +175,7 @@ var Place = function (data) {
  * @constructor
  **/
 var ViewModel = function () {
+    "use strict";
     /**
      * ViewModel self reference
      * @property self
@@ -186,8 +196,7 @@ var ViewModel = function () {
                 zoomControl: false,
                 panControl: false,
                 streetViewControl: false
-            },
-            map;
+            };
         if (typeof CODE_IS_UNDER_TEST === "undefined") {
             self.map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         }
@@ -199,7 +208,6 @@ var ViewModel = function () {
      * @return a newly created infoWindow with the content set to an empty string
      **/
     self.createInfoWindow = function () {
-        console.log('');
         if (typeof CODE_IS_UNDER_TEST === "undefined") {
             return new google.maps.InfoWindow({
                 content: ''
@@ -234,7 +242,7 @@ var ViewModel = function () {
                 $("#tab0").prop("checked", true);
             }
         }, 0);
-    }
+    };
 
     /** 
      * createMap Helper function to create the google map instance, it sets the map options as required
@@ -242,9 +250,10 @@ var ViewModel = function () {
      * @param status the status of the request
      **/
     self.processGoogleImageResults = function (results, status) {
-        if (status == google.maps.places.PlacesServiceStatus.OK) {
-            for (var i = 0; i < results.length; i++) {
-                var place = results[i];
+        var i, place;
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            for (i = 0; i < results.length; i += 1) {
+                place = results[i];
                 if (place.name === self.currentPlace().name()) {
                     self.currentPlace().ratings.push({
                         name: "Google Rating",
@@ -261,9 +270,13 @@ var ViewModel = function () {
      * getGooglePlacesInfo function that calls the google places api to get the google rating
      **/
     self.getGooglePlacesInfo = function () {
-        var hasGooglePlacesInfo = false;
+        var hasGooglePlacesInfo = false,
+            p,
+            max,
+            request,
+            service;
         //check if the google rating has already been added to the place's ratings
-        for (p in self.currentPlace().ratings()) {
+        for (p = 0, max = self.currentPlace().ratings().length; p < max; p += 1) {
             if (self.currentPlace().ratings()[p].name === "Google Rating") {
                 hasGooglePlacesInfo = true;
                 break;
@@ -271,13 +284,13 @@ var ViewModel = function () {
         }
         //if not, request it
         if (!hasGooglePlacesInfo) {
-            var request = {
+            request = {
                 location: new google.maps.LatLng(self.currentPlace().lat(), self.currentPlace().lng()),
                 radius: '500',
                 name: self.currentPlace().name()
             };
 
-            var service = new google.maps.places.PlacesService(self.map);
+            service = new google.maps.places.PlacesService(self.map);
             service.nearbySearch(request, self.processGoogleImageResults);
         }
     };
@@ -288,46 +301,54 @@ var ViewModel = function () {
      * @param data the response from the json call
      **/
     self.parseFlickrImages = function (data) {
-        var images = "";
+        var images = "",
+            a,
+            i,
+            getSizesURL,
+            photosExpected,
+            photosReceived,
+            getSizesHandler;
+        getSizesHandler = function (data) {
+            var sizes = data.sizes.size,
+                availableSizes = [],
+                sizeIndex = -1,
+                s;
+            photosReceived += 1;
+            for (s = 0; s < sizes.length; s += 1) {
+                availableSizes.push(sizes[s].label);
+            }
+            //make sure medium-or-slightly larger size is available
+            sizeIndex = availableSizes.indexOf("Medium");
+            if (sizeIndex === -1) {
+                sizeIndex = availableSizes.indexOf("Medium 640");
+            }
+            if (sizeIndex === -1) {
+                sizeIndex = availableSizes.indexOf("Medium 800");
+            }
+            if (sizeIndex !== -1) {
+                images += "<img src=\"" + sizes[sizeIndex].source + "\" />";
+            }
+            // when all expected photos have been processed, add the detail to the current place
+            if (photosReceived === photosExpected) {
+                self.currentPlace().details.push({
+                    name: "Flickr",
+                    value: images
+                });
+                self.updateMarkerInformation();
+            }
+        };
         if (typeof data !== "undefined" && typeof data.photos !== "undefined" && typeof data.photos.photo !== "undefined") {
-            var a = data.photos.photo;
-            var getSizesURL = FLICKR_BASE_URL + "getSizes&jsoncallback=?";
-            var photosExpected = a.length;
-            var photosReceived = 0;
-            for (var i in a) {
+            a = data.photos.photo;
+            getSizesURL = FLICKR_BASE_URL + "getSizes&jsoncallback=?";
+            photosExpected = a.length;
+            photosReceived = 0;
+            for (i = 0; i < a.length; i += 1) {
                 //            console.log("getting sizes from: " + getSizesURL);
                 getAjaxFromURL(getSizesURL, {
                     photo_id: a[i].id,
                     format: "json",
                     api_key: FLICKR_API_KEY
-                }, function (data) {
-                    var sizes = data.sizes.size;
-                    var availableSizes = [];
-                    var sizeIndex = -1;
-                    photosReceived++;
-                    for (var s in sizes) {
-                        availableSizes.push(sizes[s].label);
-                    }
-                    //make sure medium-or-slightly larger size is available
-                    sizeIndex = availableSizes.indexOf("Medium");
-                    if (sizeIndex === -1) {
-                        sizeIndex = availableSizes.indexOf("Medium 640");
-                    }
-                    if (sizeIndex === -1) {
-                        sizeIndex = availableSizes.indexOf("Medium 800");
-                    }
-                    if (sizeIndex !== -1) {
-                        images += "<img src=\"" + sizes[sizeIndex].source + "\" />";
-                    }
-                    // when all expected photos have been processed, add the detail to the current place
-                    if (photosReceived === photosExpected) {
-                        self.currentPlace().details.push({
-                            name: "Flickr",
-                            value: images
-                        });
-                        self.updateMarkerInformation();
-                    }
-                });
+                }, getSizesHandler);
             }
         }
     };
@@ -337,8 +358,11 @@ var ViewModel = function () {
      **/
     self.getFlickrImages = function () {
         //Check if the Flickr detail has been added
-        var hasFlickr = false;
-        for (p in self.currentPlace().details()) {
+        var hasFlickr = false,
+            p,
+            max,
+            flickrAPI;
+        for (p = 0, max = self.currentPlace().details().length; p < max; p += 1) {
             if (self.currentPlace().details()[p].name === "Flickr") {
                 hasFlickr = true;
                 break;
@@ -346,7 +370,7 @@ var ViewModel = function () {
         }
         // if the flickr section has not been added, make the search on the flickr api
         if (!hasFlickr) {
-            var flickrAPI = FLICKR_BASE_URL + "search&jsoncallback=?";
+            flickrAPI = FLICKR_BASE_URL + "search&jsoncallback=?";
             //    console.log("getting images from:" + flickrAPI);
             getAjaxFromURL(flickrAPI, {
                 text: self.currentPlace().name(),
@@ -364,7 +388,8 @@ var ViewModel = function () {
      * @param m the marker that's been clicked
      **/
     self.markerClickListener = function (m) {
-        for (p in self.places) {
+        var p;
+        for (p = 0; p < self.places.length; p += 1) {
             if (m === self.places[p].marker) {
                 self.currentPlace(self.places[p]);
             }
@@ -386,28 +411,34 @@ var ViewModel = function () {
     self.createMarkerListener = function (m) {
         if (typeof CODE_IS_UNDER_TEST === "undefined") {
             google.maps.event.addListener(m, 'click', function () {
-                self.markerClickListener(m)
+                self.markerClickListener(m);
             });
         }
-    }
+    };
     /** 
      * parseFourSquareResults function that parses the results of the foursquare search
      * @param data the json result from searching on foursquare
      **/
     self.parseFourSquareResults = function (data) {
+        var g,
+            m,
+            v,
+            p,
+            place,
+            venue;
         if (typeof data !== "undefined" && typeof data.response !== "undefined" && typeof data.response !== "undefined") {
-            for (g in data.response.groups) {
-                var v = data.response.groups[g].items;
-                for (p in v) {
-                    var venue = v[p].venue;
+            for (g = 0; g < data.response.groups.length; g += 1) {
+                v = data.response.groups[g].items;
+                for (p = 0; p < v.length; p += 1) {
+                    venue = v[p].venue;
                     if (typeof CODE_IS_UNDER_TEST === "undefined") {
-                        var m = new google.maps.Marker({
+                        m = new google.maps.Marker({
                             position: new google.maps.LatLng(venue.location.lat, venue.location.lng),
                             map: self.map,
                             title: venue.name
                         });
                     }
-                    var p = new Place({
+                    place = new Place({
                         id: venue.id,
                         name: venue.name,
                         phone: venue.contact.formattedPhone,
@@ -421,11 +452,11 @@ var ViewModel = function () {
                         },
                         marker: m
                     });
-                    self.places.push(p);
-                    self.filteredPlaces.push(p);
-                    p.details.push({
+                    self.places.push(place);
+                    self.filteredPlaces.push(place);
+                    place.details.push({
                         name: "Street View",
-                        value: "<img src=\"" + GOOGLE_SV_BASE_URL + p.lat() + "," + p.lng() + "\" alt=\"Streetview image\" />"
+                        value: "<img src=\"" + GOOGLE_SV_BASE_URL + place.lat() + "," + place.lng() + "\" alt=\"Streetview image\" />"
                     });
 
                     self.createMarkerListener(m);
@@ -441,7 +472,7 @@ var ViewModel = function () {
     self.getFourSquareInformation = function () {
         var fourSquareURL = FOURSQUARE_BASE_URL + DEFAULT_LAT + "," + DEFAULT_LNG;
         getAjaxFromURL(fourSquareURL, undefined, self.parseFourSquareResults);
-    }
+    };
 
     /**
      * Places array
@@ -479,10 +510,12 @@ var ViewModel = function () {
 
     // Ask to be notified every time the bindings are triggered (key down in this case)
     self.searchValue.subscribe(function () {
+        var p,
+            name;
         self.filteredPlaces.removeAll();
         if (self.searchValue !== '') {
-            for (p in self.places) {
-                var name = self.places[p].name().toLowerCase();
+            for (p = 0; p < self.places.length; p += 1) {
+                name = self.places[p].name().toLowerCase();
                 //check if the search term is contained within the place's name
                 if (name.indexOf(self.searchValue().toLowerCase()) > -1) {
                     self.places[p].marker.setMap(self.map);
@@ -503,31 +536,33 @@ var ViewModel = function () {
      * @params place the place object that's been clicked on
      */
     self.clickOnMarker = function (place) {
-        new google.maps.event.trigger(place.marker, 'click');
+        google.maps.event.trigger(place.marker, 'click');
     };
 
     self.clickOnListButton = function () {
         self.isListVisible(!self.isListVisible());
     };
 
-    jQuery(document).ready(function ($) {
+    $(document).ready(function ($) {
         if (typeof CODE_IS_UNDER_TEST === "undefined") {
             self.getFourSquareInformation();
         }
         $.fn.stars = function () {
             return $(this).each(function () {
+                var val,
+                    size,
+                    $span;
                 // Get the value
-                var val = parseFloat($(this).html());
+                val = parseFloat($(this).html());
                 // Make sure that the value is in 0 - 5 range, multiply to get width
-                var size = Math.max(0, (Math.min(5, val))) * 16;
+                size = Math.max(0, (Math.min(5, val))) * 16;
                 // Create stars holder
-                var $span = $('<span />').width(size);
+                $span = $('<span />').width(size);
                 // Replace the numerical value with stars
                 $(this).html($span);
             });
-        }
+        };
     });
-
-}
+};
 var vm = new ViewModel();
 ko.applyBindings(vm);

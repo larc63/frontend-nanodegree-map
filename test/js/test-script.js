@@ -1,12 +1,20 @@
 //View Model test
+/*global vm */
+/*global Place */
+/*global QUnit */
+/*global ViewModel */
+/*global fourSquareTestData */
+
 QUnit.module("ViewModel", {
     beforeEach: function () {
+        "use strict";
         // prepare something for all following tests
         this.viewmodel = new ViewModel();
         vm = this.viewmodel;
     }
 });
 QUnit.test("happy path", function (assert) {
+    "use strict";
     assert.ok(vm !== undefined, "vm is undefined");
     assert.ok(this.viewmodel.places !== undefined, "places in vm is undefined");
     assert.ok(vm.currentPlace() === undefined, "currentPlace is defined by default");
@@ -16,6 +24,7 @@ QUnit.test("happy path", function (assert) {
 });
 
 QUnit.test("number of foursquare entries", function (assert) {
+    "use strict";
     assert.strictEqual(this.viewmodel.places.length, 0, "number of places added is different than expected");
     this.viewmodel.parseFourSquareResults(fourSquareTestData);
     assert.strictEqual(this.viewmodel.places.length, 30, "number of places added is different than expected");
@@ -25,6 +34,7 @@ QUnit.test("number of foursquare entries", function (assert) {
 //Model: Place
 QUnit.module("Place", {
     beforeEach: function () {
+        "use strict";
         // prepare something for all following tests
         this.p = new Place({
             id: -1,
@@ -39,10 +49,12 @@ QUnit.module("Place", {
         });
     },
     afterEach: function () {
+        "use strict";
         // clean up after each test
     }
 });
 QUnit.test("Place happy path", function (assert) {
+    "use strict";
     assert.strictEqual(this.p.id, -1, "place id is not the expected one");
     assert.strictEqual(this.p.name(), "Kenny's Wood Fired Grill", "place name is not the expected one");
     assert.strictEqual(this.p.address(), "addr1<br/>addr2", "place address is not the expected one");
@@ -56,6 +68,7 @@ QUnit.test("Place happy path", function (assert) {
     assert.strictEqual(this.p.ratings().length, 0, "place ratings length is not the expected one");
 });
 QUnit.test("Add A Rating", function (assert) {
+    "use strict";
     this.p.ratings.push({
         name: "myrating",
         rating: 5
@@ -75,6 +88,7 @@ QUnit.test("Add A Rating", function (assert) {
     assert.strictEqual(this.p.ratings()[0].rating, 5, "place ratings first rating is not the expected one");
 });
 QUnit.test("Add Detail", function (assert) {
+    "use strict";
     this.p.details.push({
         name: "mydetail",
         value: 5
